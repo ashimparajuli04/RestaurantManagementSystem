@@ -1,0 +1,99 @@
+from typing import Annotated
+from datetime import datetime, timedelta, timezone
+
+import jwt
+from jwt.exceptions import InvalidTokenError
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from sqlmodel import Session
+
+from app.database import get_session
+
+from app.auth.models.token import TokenData
+from app.auth.utils.auth_utils import verify_password
+
+from app.user.models.user import User
+from app.user.services.user_service import get_user_by_email
+
+
+SECRET_KEY = "heheheitsasecret"
+ALGORITHM = "HS256"
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
+
+SessionDep = Annotated[Session, Depends(get_session)]
+
+def authenticate_user(
+    email: str,
+    password: str,
+    session: Session,  # ✅ plain Session
+):
+    
+    user = get_user_by_email(session, email)
+    if not user:
+        return None
+
+    if not verify_password(password, user.password_hash):
+        return None
+
+    return user
+
+
+def create_access_token(
+    data: dict,
+    expires_delta: timedelta | None = None,
+):
+    to_encode = data.copy()
+
+    expire = (
+        datetime.now(timezone.utc) + expires_delta
+        if expires_delta
+        else datetime.now(timezone.utc) + timedelta(minutes=15)
+    )
+
+    to_encode.update({"exp": expire})
+
+    return jwt.encode(
+        to_encode,
+        SECRET_KEY,
+        algorithm=ALGORITHM,
+    )
+
+
+def get_current_user(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    session: SessionDep,
+):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    try:
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM],
+        )
+        email = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+
+        token_data = TokenData(email=email)
+
+    except InvalidTokenError:
+        raise credentials_exception
+
+    user = get_user_by_email(session, token_data.email)
+    if not user:
+        raise credentials_exception
+
+    return user
+
+
+def get_current_active_user(
+    current_user: User = Depends(get_current_user),
+):
+    return current_user
