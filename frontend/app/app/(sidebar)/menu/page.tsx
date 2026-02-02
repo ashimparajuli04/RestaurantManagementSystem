@@ -154,7 +154,7 @@ export default async function MenuPage() {
       </div>
 
       {/* Footer */}
-      <div className="bg-gray-900 text-white py-6 mt-10">
+      <div className="bg-black text-white py-6 mt-10">
         <div className="max-w-7xl mx-auto text-center">
           <p className="text-gray-400 text-sm">All prices are inclusive of taxes</p>
         </div>
