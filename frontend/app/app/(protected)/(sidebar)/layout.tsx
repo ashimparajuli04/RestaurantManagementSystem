@@ -5,12 +5,12 @@ import { AppSidebar } from "@/components/app-sidebar";
 
 export default function SidebarLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen w-full">
       {/* Sidebar */}
       <AppSidebar />
 
       {/* Main content */}
-      <main className="flex-1">{children}</main>
+      <main className="w-full">{children}</main>
     </div>
   );
 }

@@ -6,7 +6,7 @@ from app.database import get_session
 
 from app.user.models.user import User
 from app.user.schemas.user import UserCreate, UserPublic
-from app.user.services.user_service import create_user, get_user_by_email, get_users, get_user_by_id
+from app.user.services.user_service import create_user, get_user_by_email, get_active_users, get_user_by_id
 from app.auth.services.auth_service import get_current_active_user
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -19,7 +19,7 @@ SessionDep = Annotated[Session, Depends(get_session)]
     dependencies=[Depends(get_current_active_user)]
 )
 def read_users(session: SessionDep):
-    return get_users(session)
+    return get_active_users(session)
     
 @router.post(
     "/signup",

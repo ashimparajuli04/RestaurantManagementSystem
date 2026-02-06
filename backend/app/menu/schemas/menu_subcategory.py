@@ -7,3 +7,8 @@ class MenuSubCategoryCreate(SQLModel):
 
     class Config:
         extra = "forbid"
+
+class MenuSubCategoryUpdate(SQLModel):
+    name: str | None = None
+    category_id: int | None = None
+    description: str | None = None

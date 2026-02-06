@@ -10,3 +10,10 @@ class MenuItemCreate(SQLModel):
 
     class Config:
         extra = "forbid"
+
+class MenuItemUpdate(SQLModel):
+    name: str | None = None
+    price: float | None = None
+    category_id: int | None = None
+    sub_category_id: int | None = None
+    description: str | None = None

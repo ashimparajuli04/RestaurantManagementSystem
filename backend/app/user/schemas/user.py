@@ -19,3 +19,10 @@ class UserPublic(SQLModel):
 
 class UserAdmin(UserPublic):
     is_active: bool
+    
+class UserUpdate(SQLModel):
+    first_name: str | None = None
+    middle_name: str | None = None
+    last_name: str | None = None
+    role: UserRole | None = None
+    is_active: bool | None = None

@@ -1,6 +1,8 @@
 "use client";
 
 import { useAuth } from "@/providers/auth-provider";
+import { Button } from "@/components/ui/button";
+import {Plus} from "lucide-react";
 
 export default function Dashboard() {
   const { user, loading } = useAuth();
@@ -9,28 +11,12 @@ export default function Dashboard() {
   if (!user) return <div>User not found</div>;
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
-
-      <div className="space-y-2">
-        <p>
-          <strong>ID:</strong> {user.id}
-        </p>
-        <p>
-          <strong>Email:</strong> {user.email}
-        </p>
-        <p>
-          <strong>First Name:</strong> {user.first_name}
-        </p>
-        <p>
-          <strong>Middle Name:</strong> {user.middle_name || "-"}
-        </p>
-        <p>
-          <strong>Last Name:</strong> {user.last_name}
-        </p>
-        <p>
-          <strong>Role:</strong> {user.role}
-        </p>
+    <div className="w-full h-screen">
+      <div className="w-full bg-nj-cream flex justify-end">
+        <Button className="flex items-center justify-center my-5 mr-5">
+          <Plus className="" />
+          Create Order
+        </Button>
       </div>
     </div>
   );

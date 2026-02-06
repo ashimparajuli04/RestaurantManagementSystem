@@ -9,8 +9,8 @@ class MenuCategoryCreate(SQLModel):
         extra = "forbid"
 
 
-class MenuCategoryPublic(SQLModel):
-    id: int
-    name: str
+class MenuCategoryUpdate(SQLModel):
+    name: str | None = None
     description: str | None = None
-    display_order: int
+    
+

@@ -1,4 +1,13 @@
 import { UtensilsCrossed } from "lucide-react"
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import { Badge } from "@/components/ui/badge"
 
 type MenuCategory = {
   id: number
@@ -50,9 +59,9 @@ export default async function MenuPage() {
   ])
 
   return (
-    <div className="min-h-screen bg-gray-5">
+    <div className="min-h-screen w-full overflow-hidden bg-gray-5 bg-nj-cream">
       {/* Header */}
-      <div className="bg-black text-white py-12 px-6 shadow-lg rounded-lg mx-5">
+      {/*<div className="bg-black text-white py-12 px-6 shadow-lg rounded-lg mx-5">
         <div className="max-w-7xl mx-auto text-center">
           <div className="flex justify-center mb-3">
             <UtensilsCrossed className="w-10 h-10" strokeWidth={1.5} />
@@ -60,17 +69,18 @@ export default async function MenuPage() {
           <h1 className="text-4xl font-bold mb-2 tracking-wide">Our Menu</h1>
           <p className="text-gray-400 text-sm">Explore our selection</p>
         </div>
-      </div>
+      </div>*/}
 
       {/* Menu Content - 3 Column Grid */}
-      <div className="max-w-7xl mx-auto px-6 py-5">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {categories
             .sort((a, b) => a.display_order - b.display_order)
             .map((category) => {
               const categorySubCategories = subCategories
                 .filter((sc) => sc.category_id === category.id)
                 .sort((a, b) => a.display_order - b.display_order)
+      
               const categoryItemsWithNoSub = items
                 .filter(
                   (item) =>
@@ -79,79 +89,72 @@ export default async function MenuPage() {
                     item.is_available
                 )
                 .sort((a, b) => a.display_order - b.display_order)
-
+      
               return (
-                <div
-                  key={category.id}
-                  className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden flex flex-col"
-                >
-                  {/* Category Header */}
-                  <div className="bg-black text-white py-4 px-5">
-                    <h2 className="text-xl font-bold text-center">
+                <Card key={category.id} className="overflow-hidden flex flex-col bg-nj-offwhite">
+                  <CardHeader className="">
+                    <CardTitle className="font-giulia font-bold text-lg font-semibold text-gray-800 -mt-2">
                       {category.name}
-                    </h2>
-                  </div>
-
-                  {/* Menu Items */}
-                  <div className="p-5 space-y-5 flex-1">
-                    {/* Subcategories */}
+                    </CardTitle>
+                    <Separator></Separator>
+                  </CardHeader>
+                  
+      
+                  <CardContent className="space-y-4">
+                    {/* Subcategories as nested cards */}
                     {categorySubCategories.map((sub) => {
                       const subItems = items
                         .filter(
                           (item) =>
-                            item.sub_category_id === sub.id &&
-                            item.is_available
+                            item.sub_category_id === sub.id && item.is_available
                         )
                         .sort((a, b) => a.display_order - b.display_order)
-
+      
                       return (
-                        <div key={sub.id} className="space-y-2">
-                          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide border-b border-gray-300 pb-1">
-                            {sub.name}
-                          </h3>
-                          <div className="space-y-2">
+                        <Card key={sub.id} className="border-gray-200 transform transition-transform duration-100 hover:scale-101">
+                          <CardHeader>
+                            <CardTitle className="text-sm -mt-2">{sub.name}</CardTitle>
+                            <Separator></Separator>
+                          </CardHeader>
+                          <CardContent className="-mt-5">
                             {subItems.map((item) => (
                               <div
                                 key={item.id}
-                                className="flex justify-between items-start gap-2 text-sm hover:bg-gray-50 px-2 py-1.5 rounded transition-colors"
+                                className="flex justify-between items-center p-2 rounded hover:bg-gray-50 transition"
                               >
-                                <span className="text-gray-800 flex-1 leading-snug">
-                                  {item.name}
-                                </span>
-                                <span className="font-semibold text-gray-900 whitespace-nowrap">
-                                  ₹{item.price}
-                                </span>
+                                <span>{item.name}</span>
+                                <Badge variant="outline">₹{item.price}</Badge>
                               </div>
                             ))}
-                          </div>
-                        </div>
+                          </CardContent>
+                        </Card>
+                        
                       )
                     })}
-
+      
                     {/* Items without subcategory */}
                     {categoryItemsWithNoSub.length > 0 && (
-                      <div className="space-y-2">
-                        {categoryItemsWithNoSub.map((item) => (
-                          <div
-                            key={item.id}
-                            className="flex justify-between items-start gap-2 text-sm hover:bg-gray-50 px-2 py-1.5 rounded transition-colors"
-                          >
-                            <span className="text-gray-800 flex-1 leading-snug">
-                              {item.name}
-                            </span>
-                            <span className="font-semibold text-gray-900 whitespace-nowrap">
-                              ₹{item.price}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
+                      <Card className="border-gray-200 transform transition-transform duration-100 hover:scale-101">
+                        <CardContent className="-mt-5">
+                          {categoryItemsWithNoSub.map((item) => (
+                            <div
+                              key={item.id}
+                              className="flex justify-between items-center p-2 rounded hover:bg-gray-50 transition"
+                            >
+                              <span>{item.name}</span>
+                              <Badge variant="outline">₹{item.price}</Badge>
+                            </div>
+                          ))}
+                        </CardContent>
+                      </Card>
                     )}
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               )
             })}
         </div>
       </div>
+
 
       {/* Footer */}
       <div className="bg-black text-white py-6 mt-10">
