@@ -1,11 +1,11 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 
 from app.database import get_session
 from app.menu.models.menu_category import MenuCategory
 from app.menu.schemas.menu_category import MenuCategoryCreate, MenuCategoryUpdate
-from app.menu.services.menucategory_service import create_category, get_category_by_id, update_category
+from app.menu.services.menucategory_service import create_category, get_category_by_id, update_category, delete_menu_category_hard
 from app.auth.services.auth_service import require_admin
 
 router = APIRouter(
@@ -38,3 +38,19 @@ def patch_category(
     category = get_category_by_id(session, category_id)
 
     return update_category(session=session, category=category, data=data)
+    
+@router.delete(
+    "/{category_id}",
+    status_code=204,
+    dependencies=[Depends(require_admin)]
+)
+def delete_category(
+    category_id: int,
+    session: SessionDep,
+):
+    category = get_category_by_id(session, category_id)
+
+    if not category:
+        raise HTTPException(status_code=404, detail="category not found")
+
+    delete_menu_category_hard(session, category)

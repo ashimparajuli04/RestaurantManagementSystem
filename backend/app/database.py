@@ -1,20 +1,13 @@
-from sqlmodel import SQLModel, Session, create_engine
-from sqlalchemy import event
-import sqlite3
+from dotenv import load_dotenv
+import os
+from sqlmodel import create_engine, SQLModel, Session
 
-sqlite_file_name = "database.db"
-sqlite_url = f"sqlite:///{sqlite_file_name}"
+load_dotenv()
 
-connect_args = {"check_same_thread": False}
-engine = create_engine(sqlite_url, connect_args=connect_args)
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Enable foreign keys for SQLite
-@event.listens_for(engine, "connect")
-def enable_sqlite_fk(dbapi_connection, connection_record):
-    if isinstance(dbapi_connection, sqlite3.Connection):
-        cursor = dbapi_connection.cursor()
-        cursor.execute("PRAGMA foreign_keys=ON;")
-        cursor.close()
+# PostgreSQL engine (no connect_args needed)
+engine = create_engine(DATABASE_URL, echo=False)
 
 def init_db():
     SQLModel.metadata.create_all(engine)

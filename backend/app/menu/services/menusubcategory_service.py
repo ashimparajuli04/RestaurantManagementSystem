@@ -44,3 +44,7 @@ def update_subcategory(
     session.commit()
     session.refresh(subcategory)
     return subcategory
+    
+def delete_menu_subcategory_hard(session: Session, subcategory: MenuSubCategory):
+    session.delete(subcategory)
+    session.commit()

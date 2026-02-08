@@ -60,3 +60,7 @@ def update_menuitem(
     session.commit()
     session.refresh(item)
     return item
+    
+def delete_menu_item_hard(session: Session, item: MenuItem):
+    session.delete(item)
+    session.commit()

@@ -43,3 +43,7 @@ def update_category(
     session.commit()
     session.refresh(category)
     return category
+    
+def delete_menu_category_hard(session: Session, category: MenuCategory):
+    session.delete(category)
+    session.commit()
