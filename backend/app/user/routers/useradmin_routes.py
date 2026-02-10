@@ -8,7 +8,7 @@ from app.user.schemas.user import UserAdmin, UserUpdate
 from app.user.services.user_service import get_users, get_user_by_id, update_user, delete_user_hard
 from app.auth.services.auth_service import require_admin
 
-router = APIRouter(prefix="/admin/users", tags=["admin-users"])
+router = APIRouter(prefix="/admin/users", tags=["users"])
 
 SessionDep = Annotated[Session, Depends(get_session)]
 

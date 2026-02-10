@@ -11,3 +11,14 @@ class DiningTable(SQLModel, table=True):
     sessions: list["TableSession"] = Relationship(
         back_populates="table",
     )
+    
+    @property
+    def active_session(self) -> "TableSession | None":
+        return next(
+            (s for s in self.sessions if s.ended_at is None),
+            None
+        )
+
+    @property
+    def is_occupied(self) -> bool:
+        return self.active_session is not None

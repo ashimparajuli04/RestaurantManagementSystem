@@ -6,6 +6,7 @@ from app.menu.schemas.menu_item import MenuItemCreate, MenuItemUpdate
 from app.menu.models.menu_subcategory import MenuSubCategory
 
 
+
 def create_menu_item(session, data: MenuItemCreate) -> MenuItem:
     # 1️⃣ Validate subcategory exists
     subcategory = session.get(MenuSubCategory, data.sub_category_id)
