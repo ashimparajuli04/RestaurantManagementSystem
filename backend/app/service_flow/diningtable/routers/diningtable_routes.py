@@ -26,13 +26,17 @@ def get_tables(session: SessionDep):
         select(DiningTable).options(selectinload(DiningTable.sessions)) # type:ignore
     ).all()
 
-    return [
-        DiningTableRead(
-            id=t.id, # type:ignore
-            number=t.number,
-            is_occupied=t.is_occupied,
-            active_session_id=t.active_session.id if t.active_session else None,
-            customer_name=t.active_session.customer_name if t.active_session else None,
+    result = []
+    for t in tables:
+        s = t.active_session
+        result.append(
+            DiningTableRead(
+                id=t.id,  # type: ignore
+                number=t.number,
+                is_occupied=s is not None,
+                active_session_id=s.id if s else None,
+                customer_name=s.customer_name if s else None,
+                customer_arrival=s.started_at if s else None,
+            )
         )
-        for t in tables
-    ]
+    return result
