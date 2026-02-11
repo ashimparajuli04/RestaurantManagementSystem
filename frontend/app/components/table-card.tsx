@@ -1,18 +1,14 @@
+'use client'
+import { useRouter } from "next/navigation"
+
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Clock, User, Utensils } from "lucide-react"
-
-type Table = {
-  id: number
-  number: number
-  is_occupied: boolean
-  active_session_id: number | null
-  customer_name: string | null
-  customer_arrival: string | null
-}
+import { Table } from "@/types/table"
 
 export function TableCard({ table }: { table: Table }) {
+    
   const getTimeElapsed = (arrival: string) => {
     const arrivalTime = new Date(arrival)
     const now = new Date()
@@ -24,13 +20,14 @@ export function TableCard({ table }: { table: Table }) {
     const mins = diffMins % 60
     return `${hours}h ${mins}m`
   }
+  const router = useRouter()
 
   return (
     <Card
       className={`
-        relative transition-all duration-200 hover:shadow-lg
+        relative transition-all duration-200 hover:shadow-lg max-h-47
         ${table.is_occupied 
-          ? "border-l-4 border-l-amber-500 bg-amber-50/30" 
+          ? "border-l-4 border-l-destructive bg-amber-50/30" 
           : "border-l-4 border-l-emerald-500 bg-white hover:border-l-emerald-600"
         }
       `}
@@ -40,7 +37,7 @@ export function TableCard({ table }: { table: Table }) {
         <div 
           className={`
             h-3 w-3 rounded-full 
-            ${table.is_occupied ? "bg-amber-500 animate-pulse" : "bg-emerald-500"}
+            ${table.is_occupied ? "bg-destructive animate-pulse" : "bg-emerald-500"}
           `}
         />
       </div>
@@ -50,7 +47,7 @@ export function TableCard({ table }: { table: Table }) {
           <div className="space-y-1">
             <CardTitle className="text-2xl font-bold flex items-center gap-2">
               <Utensils className="h-5 w-5 text-muted-foreground" />
-              Table {table.number}
+              <span className="-mt-1">Table {table.number}</span>
             </CardTitle>
             <Badge
               variant={table.is_occupied ? "secondary" : "outline"}
@@ -68,7 +65,7 @@ export function TableCard({ table }: { table: Table }) {
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-2 py-2 min-h-[60px] -mt-10">
+      <CardContent className="space-y-2 py-2 min-h-15 -mt-10">
         {table.is_occupied ? (
           <>
             {table.customer_name && (
@@ -102,20 +99,25 @@ export function TableCard({ table }: { table: Table }) {
       <CardFooter className="border-t flex gap-2 -mt-6">
         {table.is_occupied ? (
           <>
-            <Button variant="outline" size="sm" className="flex-1">
+            <Button variant="outline" size="sm" className="flex-1 w-full -mt-4">
               View Orders
             </Button>
             <Button 
               variant="destructive" 
               size="sm" 
-              className="flex-1 border border-transparent transition-all hover:bg-transparent hover:text-destructive hover:border-destructive"
+              className="flex-1 w-full border border-transparent transition-all hover:bg-transparent hover:text-destructive hover:border-destructive -mt-4"
             >
               Checkout
             </Button>
           </>
         ) : (
-          <Button variant="default" size="sm" className="w-full bg-emerald-600 hover:bg-emerald-700">
-            Assign Table
+            <Button
+              variant="default"
+              size="sm"
+              className="w-full bg-emerald-600 hover:bg-emerald-700 -mt-4"
+              onClick={() => router.push(``)}
+            >
+              Create Session
           </Button>
         )}
       </CardFooter>

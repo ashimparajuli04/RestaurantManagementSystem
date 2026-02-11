@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 
 from app.service_flow.diningtable.models.dining_table import DiningTable
 from app.service_flow.tablesession.models.table_session import TableSession
-from app.service_flow.tablesession.schemas.table_session import TableSessionCreate
+from app.service_flow.tablesession.schemas.table_session import TableSessionCreate, TableSessionUpdate
 
 def get_table_session_by_id(session: Session, id: int):
     return session.exec(
@@ -24,7 +24,6 @@ def create_table_session(session: Session, data: TableSessionCreate) -> TableSes
     # 3. create user
     tablesession = TableSession(
         table_id=data.table_id,
-        customer_name=data.customer_name,
     )
 
     session.add(tablesession)
@@ -35,3 +34,19 @@ def create_table_session(session: Session, data: TableSessionCreate) -> TableSes
 def delete_table_session_hard(session: Session, table: TableSession):
     session.delete(table)
     session.commit()
+    
+def update_table_session(
+    *,
+    session: Session,
+    tablesession: TableSession,
+    data: TableSessionUpdate
+) -> TableSession:
+    data_dict = data.model_dump(exclude_unset=True)
+
+    for key, value in data_dict.items():
+        setattr(tablesession, key, value)
+
+    session.add(tablesession)
+    session.commit()
+    session.refresh(tablesession)
+    return tablesession
