@@ -1,5 +1,6 @@
 'use client'
-import { useEffect, useState } from "react"
+
+import { useQuery } from "@tanstack/react-query"
 import api from "@/lib/api"
 
 import {
@@ -7,66 +8,56 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
-  CardFooter,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 
 type MenuCategory = {
-  id: number;
-  name: string;
-  display_order: number;
+  id: number
+  name: string
+  display_order: number
 }
 
 type MenuSubCategory = {
-  id: number;
-  name: string;
-  category_id: number;
-  display_order: number;
+  id: number
+  name: string
+  category_id: number
+  display_order: number
 }
 
 type MenuItem = {
-  id: number;
-  name: string;
-  price: number;
-  category_id: number;
-  sub_category_id: number | null;
-  display_order: number;
-  is_available: boolean;
+  id: number
+  name: string
+  price: number
+  category_id: number
+  sub_category_id: number | null
+  display_order: number
+  is_available: boolean
 }
 
 export default function MenuPage() {
-  const [categories, setCategories] = useState<MenuCategory[]>([])
-  const [subCategories, setSubCategories] = useState<MenuSubCategory[]>([])
-  const [items, setItems] = useState<MenuItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    async function loadMenu() {
-      try {
-        const [catRes, subRes, itemRes] = await Promise.all([
-          api.get<MenuCategory[]>("/menu-categories"),
-          api.get<MenuSubCategory[]>("/menu-subcategories"),
-          api.get<MenuItem[]>("/menu-items"),
-        ])
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["menu"],
+    queryFn: async () => {
+      const [catRes, subRes, itemRes] = await Promise.all([
+        api.get<MenuCategory[]>("/menu-categories"),
+        api.get<MenuSubCategory[]>("/menu-subcategories"),
+        api.get<MenuItem[]>("/menu-items"),
+      ])
 
-        setCategories(catRes.data)
-        setSubCategories(subRes.data)
-        setItems(itemRes.data)
-      } catch (err: any) {
-        console.error(err)
-        setError(err.response?.data?.detail || "Failed to load menu")
-      } finally {
-        setLoading(false)
+      return {
+        categories: catRes.data,
+        subCategories: subRes.data,
+        items: itemRes.data,
       }
-    }
+    },
+  })
 
-    loadMenu()
-  }, [])
+  if (isLoading) return <div>Loading menu...</div>
+  if (error) return <div className="text-red-500">Failed to load menu</div>
 
-  if (loading) return <div>Loading menu...</div>
-  if (error) return <div className="text-red-500">{error}</div>
+  const { categories, subCategories, items } = data!
 
   return (
     <div className="min-h-screen w-full overflow-hidden bg-nj-cream">
@@ -76,6 +67,7 @@ export default function MenuPage() {
             .slice()
             .sort((a, b) => a.display_order - b.display_order)
             .map((category) => {
+
               const categorySubCategories = subCategories
                 .filter((sc) => sc.category_id === category.id)
                 .slice()
@@ -94,21 +86,30 @@ export default function MenuPage() {
               return (
                 <Card key={category.id} className="flex flex-col bg-nj-offwhite">
                   <CardHeader>
-                    <CardTitle className="font-bold text-lg">{category.name}</CardTitle>
+                    <CardTitle className="font-bold text-lg">
+                      {category.name}
+                    </CardTitle>
                     <Separator />
                   </CardHeader>
 
                   <CardContent className="space-y-4">
                     {categorySubCategories.map((sub) => {
+
                       const subItems = items
-                        .filter((item) => item.sub_category_id === sub.id && item.is_available)
+                        .filter(
+                          (item) =>
+                            item.sub_category_id === sub.id &&
+                            item.is_available
+                        )
                         .slice()
                         .sort((a, b) => a.display_order - b.display_order)
 
                       return (
                         <Card key={sub.id} className="border-gray-200">
                           <CardHeader>
-                            <CardTitle className="text-sm">{sub.name}</CardTitle>
+                            <CardTitle className="text-sm">
+                              {sub.name}
+                            </CardTitle>
                             <Separator />
                           </CardHeader>
 
@@ -119,7 +120,9 @@ export default function MenuPage() {
                                 className="flex justify-between p-2 hover:bg-gray-50"
                               >
                                 <span>{item.name}</span>
-                                <Badge variant="outline">₹{item.price}</Badge>
+                                <Badge variant="outline">
+                                  ₹{item.price}
+                                </Badge>
                               </div>
                             ))}
                           </CardContent>
@@ -136,7 +139,9 @@ export default function MenuPage() {
                               className="flex justify-between p-2 hover:bg-gray-50"
                             >
                               <span>{item.name}</span>
-                              <Badge variant="outline">₹{item.price}</Badge>
+                              <Badge variant="outline">
+                                ₹{item.price}
+                              </Badge>
                             </div>
                           ))}
                         </CardContent>
@@ -151,7 +156,9 @@ export default function MenuPage() {
 
       <div className="bg-black text-white py-6 mt-10">
         <div className="max-w-7xl mx-auto text-center">
-          <p className="text-gray-400 text-sm">All prices are inclusive of taxes</p>
+          <p className="text-gray-400 text-sm">
+            All prices are inclusive of taxes
+          </p>
         </div>
       </div>
     </div>

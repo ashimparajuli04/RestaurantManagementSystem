@@ -115,7 +115,7 @@ export function TableCard({ table }: { table: Table }) {
               variant="default"
               size="sm"
               className="w-full bg-emerald-600 hover:bg-emerald-700 -mt-4"
-              onClick={() => router.push(``)}
+              onClick={() => router.push(`/menu`)}
             >
               Create Session
           </Button>

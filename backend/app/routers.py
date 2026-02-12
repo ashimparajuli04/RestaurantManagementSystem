@@ -11,6 +11,7 @@ from app.auth.routers import auth_routes
 from app.service_flow.diningtable.routers import diningtable_routes, diningtableadmin_routes
 from app.service_flow.tablesession.routers import tablesession_routes, tablesessionadmin_routes
 from app.service_flow.order.routers import order_routes
+from app.service_flow.orderitem.routers import orderitem_routes
 
 routers = [
     menuitems_routes,
@@ -27,4 +28,5 @@ routers = [
     tablesession_routes,
     tablesessionadmin_routes,
     order_routes,
+    orderitem_routes,
 ]
