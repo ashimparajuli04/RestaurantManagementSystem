@@ -1,11 +1,14 @@
 'use client'
 import { useRouter } from "next/navigation"
+import { useMutation } from "@tanstack/react-query"
+import api from "@/lib/api"
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Clock, User, Utensils } from "lucide-react"
 import { Table } from "@/types/table"
+
 
 export function TableCard({ table }: { table: Table }) {
     
@@ -21,6 +24,16 @@ export function TableCard({ table }: { table: Table }) {
     return `${hours}h ${mins}m`
   }
   const router = useRouter()
+  
+  const createSessionMutation = useMutation({
+      mutationFn: async () => {
+        const res = await api.post("/table-sessions/", { table_id: table.id })
+        return res.data
+      },
+      onSuccess: (data) => {
+        router.push(`/table-session/${data.id}`)
+      },
+    })
 
   return (
     <Card
@@ -99,7 +112,12 @@ export function TableCard({ table }: { table: Table }) {
       <CardFooter className="border-t flex gap-2 -mt-6">
         {table.is_occupied ? (
           <>
-            <Button variant="outline" size="sm" className="flex-1 w-full -mt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 w-full -mt-4"
+              onClick={() => router.push(`/table-session/${table.active_session_id}`)}
+            >
               View Orders
             </Button>
             <Button 
@@ -115,9 +133,10 @@ export function TableCard({ table }: { table: Table }) {
               variant="default"
               size="sm"
               className="w-full bg-emerald-600 hover:bg-emerald-700 -mt-4"
-              onClick={() => router.push(`/menu`)}
+              onClick={() => createSessionMutation.mutate()}
+                    disabled={createSessionMutation.isPending}
             >
-              Create Session
+              {createSessionMutation.isPending ? "Creating..." : "Create Session"}
           </Button>
         )}
       </CardFooter>

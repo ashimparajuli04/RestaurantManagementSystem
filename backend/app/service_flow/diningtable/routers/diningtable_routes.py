@@ -23,9 +23,10 @@ router = APIRouter(prefix="/tables", tags=["tables"])
 )
 def get_tables(session: SessionDep):
     tables = session.exec(
-        select(DiningTable).options(selectinload(DiningTable.sessions)) # type:ignore
+        select(DiningTable)
+        .options(selectinload(DiningTable.sessions))  # type:ignore
+        .order_by(DiningTable.number) # type:ignore
     ).all()
-
     result = []
     for t in tables:
         s = t.active_session

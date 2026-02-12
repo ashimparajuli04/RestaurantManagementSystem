@@ -1,4 +1,15 @@
+from datetime import datetime
 from sqlmodel import SQLModel
+from app.service_flow.order.models.order import OrderStatus
+from app.service_flow.orderitem.schemas.order_item import OrderItemRead
 
 class OrderCreate(SQLModel):
     session_id: int
+    
+class OrderRead(SQLModel):
+    id: int
+    items: list[OrderItemRead] = []
+    total_amount: float
+    created_at: datetime
+    status: OrderStatus
+    served_at: datetime | None

@@ -5,8 +5,9 @@ from sqlmodel import Session
 
 from app.auth.services.auth_service import get_current_active_user
 from app.database import get_session
-from app.service_flow.order.schemas.order import OrderCreate
-from app.service_flow.order.services.order_service import create_order, delete_order_hard, get_order_by_id
+from app.service_flow.order.services.order_service import delete_order_hard, get_order_by_id
+from app.service_flow.orderitem.schemas.order_item import OrderItemCreate
+from app.service_flow.orderitem.services.orderitem_services import create_order_item
 
 
 SessionDep = Annotated[Session, Depends(get_session)]
@@ -14,15 +15,19 @@ SessionDep = Annotated[Session, Depends(get_session)]
 router = APIRouter(prefix="/order", tags=["order"])
 
 @router.post(
-    "/",
-    response_model=OrderCreate,
+    "/{order_id}/items",
     status_code=201,
     dependencies=[Depends(get_current_active_user)]
 )
-def creating_order(order_in: OrderCreate, session: SessionDep):
-    return create_order(
+def create_order_item_route(
+    order_id: int,
+    order_item_in: OrderItemCreate,
+    session: SessionDep,
+):
+    return create_order_item(
         session,
-        order_in
+        order_item_in,
+        order_id
     )
     
 @router.delete(

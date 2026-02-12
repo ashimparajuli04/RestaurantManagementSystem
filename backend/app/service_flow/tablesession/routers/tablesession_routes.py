@@ -1,22 +1,26 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session
+from sqlalchemy.orm import selectinload
+from sqlmodel import Session, select
 
-from app.auth.services.auth_service import get_current_active_user, require_admin
+from app.auth.services.auth_service import get_current_active_user
 from app.database import get_session
 
+from app.service_flow.order.schemas.order import OrderCreate
+from app.service_flow.order.services.order_service import create_order
 from app.service_flow.tablesession.models.table_session import TableSession
-from app.service_flow.tablesession.schemas.table_session import TableSessionCreate, TableSessionUpdate
+from app.service_flow.tablesession.schemas.table_session import TableSessionCreate, TableSessionRead, TableSessionUpdate
 from app.service_flow.tablesession.services.tablesession_service import create_table_session, delete_table_session_hard, get_table_session_by_id, update_table_session
 
+from app.service_flow.order.models.order import Order
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
-router = APIRouter(prefix="/table-session", tags=["table-session"])
+router = APIRouter(prefix="/table-sessions", tags=["table-sessions"])
 
 @router.post(
-    "/",
-    response_model=TableSessionCreate,
+    "",
+    response_model=TableSessionRead,
     status_code=201,
     dependencies=[Depends(get_current_active_user)]
 )
@@ -26,21 +30,57 @@ def creating_table_session(table_in: TableSessionCreate, session: SessionDep):
         table_in
     )
     
+@router.post(
+    "/{table_session_id}/orders",
+    response_model=OrderCreate,
+    status_code=201,
+    dependencies=[Depends(get_current_active_user)]
+)
+def creating_order(table_session_id: int, session: SessionDep):
+    return create_order(
+        table_session_id,
+        session,
+    )
+    
+@router.get(
+    "/{session_id}",
+    response_model=TableSessionRead,
+    dependencies=[Depends(get_current_active_user)]
+)
+def get_table_session(session_id: int, session: SessionDep):
+
+    statement = (
+        select(TableSession)
+        .where(TableSession.id == session_id)
+        .options(
+            selectinload(TableSession.orders) #type: ignore
+            .selectinload(Order.items) #type: ignore
+        )
+    )
+
+    table_session = session.exec(statement).first()
+
+    if not table_session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    return table_session
+
+    
 @router.delete(
-    "/{id}",
+    "/{table_session_id}",
     status_code=204,
     dependencies=[Depends(get_current_active_user)]
 )
 def delete_table_session(
-    id: int,
+    table_session_id: int,
     session: SessionDep,
 ):
-    table = get_table_session_by_id(session, id)
+    table_session = get_table_session_by_id(session, table_session_id)
 
-    if not table:
-        raise HTTPException(status_code=404, detail="table not found")
+    if not table_session:
+        raise HTTPException(status_code=404, detail="table session not found")
 
-    delete_table_session_hard(session, table)
+    delete_table_session_hard(session, table_session)
     
 @router.patch(
     "/{table_session_id}",
