@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlmodel import SQLModel
 from app.service_flow.order.schemas.order import OrderRead
 
@@ -12,5 +13,8 @@ class TableSessionRead(SQLModel):
     table_id: int
     customer_name: str | None
     total_bill: float
+    final_bill: float | None = None
+    started_at: datetime
+    ended_at: datetime | None = None
     orders: list[OrderRead] = []
     

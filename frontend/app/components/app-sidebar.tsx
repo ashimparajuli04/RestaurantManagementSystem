@@ -1,4 +1,4 @@
-import { Calendar, LayoutDashboard, PanelLeft, Search, Settings, Utensils, X } from "lucide-react"
+import { History, LayoutDashboard, PanelLeft, Search, Settings, Utensils, X } from "lucide-react"
 import Link from "next/link"
 
 import {
@@ -27,9 +27,9 @@ const items = [
     icon: Utensils,
   },
   {
-    title: "Calendar",
-    url: "#",
-    icon: Calendar,
+    title: "History",
+    url: "/history",
+    icon: History,
   },
   {
     title: "Search",

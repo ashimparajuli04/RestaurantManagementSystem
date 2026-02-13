@@ -2,15 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query"
 import api from "@/lib/api"
-
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { Badge } from "@/components/ui/badge"
+import { Coffee } from "lucide-react"
 
 type MenuCategory = {
   id: number
@@ -36,7 +28,6 @@ type MenuItem = {
 }
 
 export default function MenuPage() {
-
   const { data, isLoading, error } = useQuery({
     queryKey: ["menu"],
     queryFn: async () => {
@@ -54,20 +45,49 @@ export default function MenuPage() {
     },
   })
 
-  if (isLoading) return <div>Loading menu...</div>
-  if (error) return <div className="text-red-500">Failed to load menu</div>
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Coffee className="h-10 w-10 mx-auto text-stone-800 animate-pulse" />
+          <p className="text-stone-600">Loading menu...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <div className="text-red-600">Failed to load menu</div>
+      </div>
+    )
+  }
 
   const { categories, subCategories, items } = data!
 
   return (
-    <div className="min-h-screen w-full overflow-hidden bg-nj-cream">
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="min-h-screen bg-stone-50">
+      {/* Header */}
+      <div className="bg-white border-b border-stone-200 rounded-b-4xl">
+        <div className="max-w-4xl mx-auto px-6 py-12 text-center">
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <Coffee className="h-8 w-8 text-stone-800" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-stone-900 mb-2 tracking-tight" style={{ fontFamily: 'Georgia, serif' }}>
+            NJ&apos;S Café & Restaurant
+          </h1>
+          <div className="w-16 h-0.5 bg-stone-800 mx-auto" />
+        </div>
+      </div>
+
+      {/* Menu */}
+      <div className="max-w-4xl mx-auto px-6 py-12">
+        <div className="space-y-16">
           {categories
             .slice()
             .sort((a, b) => a.display_order - b.display_order)
             .map((category) => {
-
               const categorySubCategories = subCategories
                 .filter((sc) => sc.category_id === category.id)
                 .slice()
@@ -84,17 +104,15 @@ export default function MenuPage() {
                 .sort((a, b) => a.display_order - b.display_order)
 
               return (
-                <Card key={category.id} className="flex flex-col bg-nj-offwhite">
-                  <CardHeader>
-                    <CardTitle className="font-bold text-lg">
-                      {category.name}
-                    </CardTitle>
-                    <Separator />
-                  </CardHeader>
+                <div key={category.id}>
+                  {/* Category Title */}
+                  <h2 className="text-2xl font-bold text-stone-900 mb-6 pb-3 border-b-2 border-stone-300" style={{ fontFamily: 'Georgia, serif' }}>
+                    {category.name}
+                  </h2>
 
-                  <CardContent className="space-y-4">
+                  <div className="space-y-8">
+                    {/* Subcategories */}
                     {categorySubCategories.map((sub) => {
-
                       const subItems = items
                         .filter(
                           (item) =>
@@ -104,59 +122,67 @@ export default function MenuPage() {
                         .slice()
                         .sort((a, b) => a.display_order - b.display_order)
 
-                      return (
-                        <Card key={sub.id} className="border-gray-200">
-                          <CardHeader>
-                            <CardTitle className="text-sm">
-                              {sub.name}
-                            </CardTitle>
-                            <Separator />
-                          </CardHeader>
+                      if (subItems.length === 0) return null
 
-                          <CardContent>
+                      return (
+                        <div key={sub.id}>
+                          <h3 className="text-sm font-semibold text-stone-600 uppercase tracking-wider mb-4 pl-1">
+                            {sub.name}
+                          </h3>
+                          <div className="space-y-3">
                             {subItems.map((item) => (
                               <div
                                 key={item.id}
-                                className="flex justify-between p-2 hover:bg-gray-50"
+                                className="flex justify-between items-baseline gap-4 group hover:bg-white px-3 py-2 rounded transition-colors"
                               >
-                                <span>{item.name}</span>
-                                <Badge variant="outline">
-                                  ₹{item.price}
-                                </Badge>
+                                <div className="flex-1 flex items-baseline gap-2">
+                                  <span className="text-stone-900 font-medium group-hover:text-stone-700 transition-colors">
+                                    {item.name}
+                                  </span>
+                                  <div className="flex-1 border-b border-dotted border-stone-300 mb-1" />
+                                </div>
+                                <span className="text-stone-700 font-medium whitespace-nowrap">
+                                  Rs. {item.price}
+                                </span>
                               </div>
                             ))}
-                          </CardContent>
-                        </Card>
+                          </div>
+                        </div>
                       )
                     })}
 
+                    {/* Items without subcategory */}
                     {categoryItemsWithNoSub.length > 0 && (
-                      <Card className="border-gray-200">
-                        <CardContent>
-                          {categoryItemsWithNoSub.map((item) => (
-                            <div
-                              key={item.id}
-                              className="flex justify-between p-2 hover:bg-gray-50"
-                            >
-                              <span>{item.name}</span>
-                              <Badge variant="outline">
-                                ₹{item.price}
-                              </Badge>
+                      <div className="space-y-3">
+                        {categoryItemsWithNoSub.map((item) => (
+                          <div
+                            key={item.id}
+                            className="flex justify-between items-baseline gap-4 group hover:bg-white px-3 py-2 rounded transition-colors"
+                          >
+                            <div className="flex-1 flex items-baseline gap-2">
+                              <span className="text-stone-900 font-medium group-hover:text-stone-700 transition-colors">
+                                {item.name}
+                              </span>
+                              <div className="flex-1 border-b border-dotted border-stone-300 mb-1" />
                             </div>
-                          ))}
-                        </CardContent>
-                      </Card>
+                            <span className="text-stone-700 font-medium whitespace-nowrap">
+                              Rs. {item.price}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     )}
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               )
             })}
         </div>
       </div>
 
-      <div className="bg-black text-white py-6 mt-10">
-        <div className="max-w-7xl mx-auto text-center">
-          <p className="text-gray-400 text-sm">
+      {/* Footer */}
+      <div className="border-t border-stone-200 bg-white py-8 mt-16">
+        <div className="max-w-4xl mx-auto text-center px-6">
+          <p className="text-sm text-stone-500">
             All prices are inclusive of taxes
           </p>
         </div>

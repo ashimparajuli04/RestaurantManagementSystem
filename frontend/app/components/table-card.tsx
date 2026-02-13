@@ -2,16 +2,23 @@
 import { useRouter } from "next/navigation"
 import { useMutation } from "@tanstack/react-query"
 import api from "@/lib/api"
-
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Clock, User, Utensils } from "lucide-react"
-import { Table } from "@/types/table"
+import { Clock, User, Utensils, ChevronRight } from "lucide-react"
 
+type Table = {
+  id: number
+  number: number
+  is_occupied: boolean
+  active_session_id: number | null
+  customer_name: string | null
+  customer_arrival: string | null
+}
 
 export function TableCard({ table }: { table: Table }) {
-    
+  const router = useRouter()
+  
   const getTimeElapsed = (arrival: string) => {
     const arrivalTime = new Date(arrival)
     const now = new Date()
@@ -23,123 +30,148 @@ export function TableCard({ table }: { table: Table }) {
     const mins = diffMins % 60
     return `${hours}h ${mins}m`
   }
-  const router = useRouter()
   
   const createSessionMutation = useMutation({
-      mutationFn: async () => {
-        const res = await api.post("/table-sessions/", { table_id: table.id })
-        return res.data
-      },
-      onSuccess: (data) => {
-        router.push(`/table-session/${data.id}`)
-      },
-    })
+    mutationFn: async () => {
+      const res = await api.post("/table-sessions/", { table_id: table.id })
+      return res.data
+    },
+    onSuccess: (data) => {
+      router.push(`/table-session/${data.id}`)
+    },
+  })
+
+  const isOccupied = table.is_occupied
 
   return (
-    <Card
-      className={`
-        relative transition-all duration-200 hover:shadow-lg max-h-47
-        ${table.is_occupied 
-          ? "border-l-4 border-l-destructive bg-amber-50/30" 
-          : "border-l-4 border-l-emerald-500 bg-white hover:border-l-emerald-600"
-        }
-      `}
-    >
-      {/* Status Indicator */}
-      <div className="absolute top-3 right-3">
-        <div 
-          className={`
-            h-3 w-3 rounded-full 
-            ${table.is_occupied ? "bg-destructive animate-pulse" : "bg-emerald-500"}
-          `}
-        />
+    <Card className={`
+      group relative overflow-hidden transition-all duration-300 hover:shadow-xl
+      ${isOccupied 
+        ? "bg-linear-to-br from-amber-50 via-white to-orange-50/30 border-amber-200 hover:border-amber-300" 
+        : "bg-linear-to-br from-emerald-50 via-white to-teal-50/30 border-emerald-200 hover:border-emerald-400"
+      }
+    `}>
+      {/* Decorative corner accent */}
+      <div className={`
+        absolute top-0 right-0 w-24 h-24 opacity-10
+        ${isOccupied ? "bg-amber-500" : "bg-emerald-500"}
+        transform rotate-45 translate-x-12 -translate-y-12
+        transition-transform duration-300 group-hover:scale-110
+      `} />
+      
+      {/* Animated status indicator */}
+      <div className="absolute top-4 right-4 flex items-center gap-2">
+        <div className={`
+          relative h-2.5 w-2.5 rounded-full
+          ${isOccupied ? "bg-amber-500" : "bg-emerald-500"}
+        `}>
+          {isOccupied && (
+            <span className="absolute inset-0 rounded-full bg-amber-500 animate-ping opacity-75" />
+          )}
+        </div>
       </div>
 
-      <CardHeader className="pb-2 space-y-1 -mt-2">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-2xl font-bold flex items-center gap-2">
-              <Utensils className="h-5 w-5 text-muted-foreground" />
-              <span className="-mt-1">Table {table.number}</span>
-            </CardTitle>
-            <Badge
-              variant={table.is_occupied ? "secondary" : "outline"}
-              className={`
-                font-medium
-                ${table.is_occupied 
-                  ? "bg-amber-100 text-amber-800 border-amber-200" 
-                  : "bg-emerald-100 text-emerald-800 border-emerald-200"
-                }
-              `}
-            >
-              {table.is_occupied ? "Occupied" : "Available"}
-            </Badge>
+      <div className="relative p-5">
+        {/* Header */}
+        <div className="mb-4">
+          <div className="flex items-center gap-3 mb-2">
+            <div className={`
+              p-2 rounded-xl transition-colors
+              ${isOccupied 
+                ? "bg-amber-100 text-amber-600" 
+                : "bg-emerald-100 text-emerald-600"
+              }
+            `}>
+              <Utensils className="h-5 w-5" />
+            </div>
+            <h3 className="text-2xl font-bold tracking-tight">Table {table.number}</h3>
           </div>
+          
+          <Badge className={`
+            font-semibold tracking-wide text-xs px-3 py-1
+            ${isOccupied 
+              ? "bg-amber-500 text-white hover:bg-amber-600 border-0" 
+              : "bg-emerald-500 text-white hover:bg-emerald-600 border-0"
+            }
+          `}>
+            {isOccupied ? "OCCUPIED" : "AVAILABLE"}
+          </Badge>
         </div>
-      </CardHeader>
 
-      <CardContent className="space-y-2 py-2 min-h-15 -mt-10">
-        {table.is_occupied ? (
-          <>
-            {table.customer_name && (
-              <div className="flex items-center gap-2 text-sm">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">{table.customer_name}</span>
-              </div>
-            )}
-            {table.customer_arrival && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Clock className="h-4 w-4" />
-                <span>
-                  {new Date(table.customer_arrival).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-                <span className="text-xs bg-muted px-2 py-0.5 rounded-full">
-                  {getTimeElapsed(table.customer_arrival)}
-                </span>
-              </div>
-            )}
-          </>
-        ) : (
-          <p className="text-sm text-muted-foreground italic">
-            Ready for new guests
-          </p>
-        )}
-      </CardContent>
+        {/* Info Section */}
+        <div className={`
+          min-h-18 mb-4 p-3 rounded-lg transition-colors
+          ${isOccupied 
+            ? "bg-white/60 backdrop-blur-sm border border-amber-100" 
+            : "bg-white/40 backdrop-blur-sm border border-emerald-100"
+          }
+        `}>
+          {isOccupied ? (
+            <div className="space-y-2.5">
+              {table.customer_name && (
+                <div className="flex items-center gap-2.5">
+                  <User className="h-4 w-4 text-amber-600" />
+                  <span className="font-semibold text-sm">{table.customer_name}</span>
+                </div>
+              )}
+              {table.customer_arrival && (
+                <div className="flex items-center gap-2.5 text-sm">
+                  <Clock className="h-4 w-4 text-gray-500" />
+                  <span className="text-gray-600">
+                    {new Date(table.customer_arrival).toLocaleTimeString("en-NP", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      timeZone: "Asia/Kathmandu",
+                    })}
+                  </span>
 
-      <CardFooter className="border-t flex gap-2 -mt-6">
-        {table.is_occupied ? (
-          <>
+                  <span className="ml-auto bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full text-xs font-bold">
+                    {getTimeElapsed(table.customer_arrival)}
+                  </span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <p className="text-sm text-gray-500 font-medium italic">Ready for new guests</p>
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="space-y-2">
+          {isOccupied ? (
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="font-semibold border-2 hover:bg-gray-50 group/btn"
+                onClick={() => router.push(`/table-session/${table.active_session_id}`)}
+              >
+                View Orders
+                <ChevronRight className="h-4 w-4 ml-1 transition-transform group-hover/btn:translate-x-1" />
+              </Button>
+              <Button 
+                variant="outline"
+                size="sm"
+                className="font-semibold border-2 border-amber-300 text-amber-600 hover:bg-amber-600 hover:text-white transition-all"
+                onClick={() => router.push(`/checkout/${table.active_session_id}`)}
+              >
+                Checkout
+              </Button>
+            </div>
+          ) : (
             <Button
-              variant="outline"
               size="sm"
-              className="flex-1 w-full -mt-4"
-              onClick={() => router.push(`/table-session/${table.active_session_id}`)}
-            >
-              View Orders
-            </Button>
-            <Button 
-              variant="destructive" 
-              size="sm" 
-              className="flex-1 w-full border border-transparent transition-all hover:bg-transparent hover:text-destructive hover:border-destructive -mt-4"
-            >
-              Checkout
-            </Button>
-          </>
-        ) : (
-            <Button
-              variant="default"
-              size="sm"
-              className="w-full bg-emerald-600 hover:bg-emerald-700 -mt-4"
+              className="w-full bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02]"
               onClick={() => createSessionMutation.mutate()}
-                    disabled={createSessionMutation.isPending}
+              disabled={createSessionMutation.isPending}
             >
-              {createSessionMutation.isPending ? "Creating..." : "Create Session"}
-          </Button>
-        )}
-      </CardFooter>
+              {createSessionMutation.isPending ? "Creating..." : "Start Session"}
+            </Button>
+          )}
+        </div>
+      </div>
     </Card>
   )
 }

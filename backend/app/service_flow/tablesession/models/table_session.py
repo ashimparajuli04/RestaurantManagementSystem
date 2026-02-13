@@ -1,5 +1,6 @@
 from sqlmodel import Field, SQLModel, Relationship
 from datetime import datetime, timezone
+from sqlalchemy import Column, DateTime
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -16,9 +17,15 @@ class TableSession(SQLModel, table=True):
     customer_name: str | None = None
 
     started_at: datetime = Field(
-            default_factory=lambda: datetime.now(timezone.utc)
-        )
-    ended_at: datetime | None = None
+        sa_column=Column(DateTime(timezone=True), nullable=False),
+        default_factory=lambda: datetime.now(timezone.utc),
+    )
+    
+    ended_at: datetime | None = Field(
+        sa_column=Column(DateTime(timezone=True), nullable=True),
+        default=None,
+    )
+    
     final_bill: float | None = None
 
     table: DiningTable = Relationship(back_populates="sessions")
