@@ -53,7 +53,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <div className="flex justify-between w-full">
               <div className="flex-3/4">
-                <SidebarGroupLabel>NJ'S Cafe and Restaurant</SidebarGroupLabel>
+                <SidebarGroupLabel>NJ&apos;S Cafe and Restaurant</SidebarGroupLabel>
                 
               </div>
               <button

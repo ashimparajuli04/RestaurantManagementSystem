@@ -67,7 +67,7 @@ export default function MenuPage() {
   const { categories, subCategories, items } = data!
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <div className="bg-white border-b border-stone-200 rounded-b-4xl">
         <div className="max-w-4xl mx-auto px-6 py-12 text-center">

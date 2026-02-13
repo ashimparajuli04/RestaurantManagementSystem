@@ -12,6 +12,8 @@ from app.service_flow.diningtable.routers import diningtable_routes, diningtable
 from app.service_flow.tablesession.routers import tablesession_routes, tablesessionadmin_routes
 from app.service_flow.order.routers import order_routes
 from app.service_flow.orderitem.routers import orderitem_routes
+from app.statistics.routers import stat_routes
+from app.customer.routers import customer_routes
 
 routers = [
     menuitems_routes,
@@ -29,4 +31,6 @@ routers = [
     tablesessionadmin_routes,
     order_routes,
     orderitem_routes,
+    stat_routes,
+    customer_routes,
 ]

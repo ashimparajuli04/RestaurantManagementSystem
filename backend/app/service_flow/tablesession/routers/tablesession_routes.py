@@ -1,7 +1,7 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import selectinload
-from sqlmodel import Session, select
+from sqlmodel import Session, col, func, select
 
 from app.auth.services.auth_service import get_current_active_user
 from app.database import get_session
@@ -9,7 +9,7 @@ from app.database import get_session
 from app.service_flow.order.schemas.order import OrderCreate
 from app.service_flow.order.services.order_service import create_order
 from app.service_flow.tablesession.models.table_session import TableSession
-from app.service_flow.tablesession.schemas.table_session import TableSessionCreate, TableSessionRead, TableSessionUpdate
+from app.service_flow.tablesession.schemas.table_session import TableSessionCreate, TableSessionPagination, TableSessionRead, TableSessionUpdate
 from app.service_flow.tablesession.services.tablesession_service import create_table_session, delete_table_session_hard, get_table_session_by_id, update_table_session
 
 from app.service_flow.order.models.order import Order
@@ -60,6 +60,59 @@ def close_table_session(session_id: int, session: SessionDep):
     session.add(tablesession)
     session.commit()
     session.refresh(tablesession)
+
+@router.get(
+    "/history/paginated",
+    response_model=dict, 
+    dependencies=[Depends(get_current_active_user)]
+)
+def get_table_sessions_paginated(
+    session: SessionDep,
+    page: int = Query(1, ge=1, description="Page number starting from 1"),
+    page_size: int = Query(10, ge=1, le=100, description="Number of items per page")
+):
+    # Calculate offset
+    offset = (page - 1) * page_size
+    
+    # Query for closed sessions only, ordered by ended_at descending
+    statement = (
+        select(TableSession)
+        .where(col(TableSession.ended_at).is_not(None))  # Only closed sessions
+        .order_by(TableSession.ended_at.desc())  # Latest first
+        .offset(offset)
+        .limit(page_size)
+    )
+    
+    sessions = session.exec(statement).all()
+    
+    # Get total count for pagination metadata
+    count_statement = (
+        select(func.count(TableSession.id)) # type:ignore
+        .where(col(TableSession.ended_at).is_not(None))
+    )
+    total = session.exec(count_statement).one()
+    
+    # Convert to pagination schema
+    items = [
+        TableSessionPagination(
+            id=s.id,
+            table_id=s.table_id,
+            customer_name=s.customer_name,
+            final_bill=s.final_bill,  
+            started_at=s.started_at,  
+            ended_at=s.ended_at
+        )
+        for s in sessions
+    ]
+    
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": (total + page_size - 1) // page_size
+    }
+
     
 @router.get(
     "/{session_id}",

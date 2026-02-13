@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from app.service_flow.diningtable.models.dining_table import DiningTable
     from app.service_flow.order.models.order import Order
+    from app.customer.models.customer import Customer
 
 
 class TableSession(SQLModel, table=True):
@@ -15,6 +16,9 @@ class TableSession(SQLModel, table=True):
         foreign_key="diningtable.id",
     )
     customer_name: str | None = None
+    # customer_id: int | None = Field(
+    #     foreign_key="customer.id",
+    # )
 
     started_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True), nullable=False),
@@ -33,6 +37,10 @@ class TableSession(SQLModel, table=True):
         back_populates="session",
         sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
+    # customer: "Customer" = Relationship(
+    #     back_populates="sessions"
+    # )
+    
     
     @property
     def total_bill(self) -> float:

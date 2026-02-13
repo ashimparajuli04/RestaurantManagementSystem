@@ -6,12 +6,12 @@ from app.database import get_session
 from app.menu.models.menu_category import MenuCategory
 from app.auth.services.auth_service import get_current_active_user
 
+SessionDep = Annotated[Session, Depends(get_session)]
+
 router = APIRouter(
     prefix="/menu-categories",
     tags=["menu-categories"],
 )
-
-SessionDep = Annotated[Session, Depends(get_session)]
 
 @router.get("/",
     response_model=list[MenuCategory],
