@@ -14,7 +14,7 @@ router = APIRouter(
 SessionDep = Annotated[Session, Depends(get_session)]
 
 @router.get(
-    "/",
+    "",
     response_model=list[MenuItem],
     dependencies=[Depends(get_current_active_user)]
 )

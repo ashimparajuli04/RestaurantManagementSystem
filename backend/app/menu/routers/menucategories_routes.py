@@ -13,7 +13,7 @@ router = APIRouter(
     tags=["menu-categories"],
 )
 
-@router.get("/",
+@router.get("",
     response_model=list[MenuCategory],
     dependencies=[Depends(get_current_active_user)]
 )

@@ -9,16 +9,18 @@ from app.menu.models.menu_subcategory import MenuSubCategory
 
 def create_menu_item(session, data: MenuItemCreate) -> MenuItem:
     # 1️⃣ Validate subcategory exists
-    subcategory = session.get(MenuSubCategory, data.sub_category_id)
-    if not subcategory:
-        raise HTTPException(status_code=400, detail="Invalid subcategory")
-
-    # 2️⃣ Ensure category ↔ subcategory match
-    if subcategory.category_id != data.category_id:
-        raise HTTPException(
-            status_code=400,
-            detail="Subcategory does not belong to category"
-        )
+    if data.sub_category_id is not None:
+            # 1️⃣ Validate subcategory exists
+            subcategory = session.get(MenuSubCategory, data.sub_category_id)
+            if not subcategory:
+                raise HTTPException(status_code=400, detail="Invalid subcategory")
+    
+            # 2️⃣ Ensure category ↔ subcategory match
+            if subcategory.category_id != data.category_id:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Subcategory does not belong to category"
+                )
 
     # 3️⃣ Get max display_order INSIDE this subcategory
     max_order = session.exec(

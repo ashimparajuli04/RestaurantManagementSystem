@@ -4,7 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query"
 import { useState } from "react"
 import api from "@/lib/api"
 import { Button } from "@/components/ui/button"
-import { Printer, CheckCircle2 } from "lucide-react"
+import { Printer, CheckCircle2, Coffee } from "lucide-react"
 
 type OrderItem = {
   id: number
@@ -87,8 +87,11 @@ export default function CheckoutPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading bill...</div>
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Coffee className="h-10 w-10 mx-auto text-stone-800 animate-pulse" />
+          <p className="text-stone-600">Loading...</p>
+        </div>
       </div>
     )
   }

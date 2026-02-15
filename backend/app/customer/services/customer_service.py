@@ -10,6 +10,11 @@ def get_customer_by_number(session: Session, number: str):
         select(Customer).where(Customer.phone_number == number)
     ).first()
     
+def get_customer_by_id(session: Session, id: int):
+    return session.exec(
+        select(Customer).where(Customer.id == id)
+    ).first()
+    
 def create_customer(session: Session, data: CustomerCreate) -> Customer:
     if get_customer_by_number(session, data.phone_number):
         raise HTTPException(

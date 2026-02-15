@@ -77,8 +77,9 @@ def get_table_sessions_paginated(
     # Query for closed sessions only, ordered by ended_at descending
     statement = (
         select(TableSession)
-        .where(col(TableSession.ended_at).is_not(None))  # Only closed sessions
-        .order_by(TableSession.ended_at.desc())  # Latest first
+        .options(selectinload(TableSession.customer))  # ← This is essential!
+        .where(col(TableSession.ended_at).is_not(None))
+        .order_by(TableSession.ended_at.desc())
         .offset(offset)
         .limit(page_size)
     )

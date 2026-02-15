@@ -1,7 +1,9 @@
 from fastapi import HTTPException
+from sqlalchemy.util import OrderedDict
 from sqlmodel import Session, select
 
 from app.service_flow.order.models.order import Order
+from app.service_flow.order.schemas.order import OrderUpdate
 from app.service_flow.tablesession.models.table_session import TableSession
 
 def get_order_by_id(session: Session, id: int):
@@ -27,3 +29,19 @@ def create_order(table_session_id: int, session: Session) -> Order:
 def delete_order_hard(session: Session, order: Order):
     session.delete(order)
     session.commit()
+    
+def update_order(
+    *,
+    session: Session,
+    order: Order,
+    data: OrderUpdate
+) -> Order:
+    data_dict = data.model_dump(exclude_unset=True)
+
+    for key, value in data_dict.items():
+        setattr(order, key, value)
+
+    session.add(order)
+    session.commit()
+    session.refresh(order)
+    return order

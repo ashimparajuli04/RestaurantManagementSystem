@@ -9,6 +9,7 @@ from app.database import get_session
 
 from app.service_flow.diningtable.schemas.dining_table import DiningTableRead
 from app.service_flow.diningtable.models.dining_table import DiningTable
+from app.service_flow.tablesession.models.table_session import TableSession
 
 
 
@@ -24,9 +25,13 @@ router = APIRouter(prefix="/tables", tags=["tables"])
 def get_tables(session: SessionDep):
     tables = session.exec(
         select(DiningTable)
-        .options(selectinload(DiningTable.sessions))  # type:ignore
+        .options(
+            selectinload(DiningTable.sessions)  # type:ignore
+            .selectinload(TableSession.customer)  # type:ignore
+        )
         .order_by(DiningTable.number) # type:ignore
     ).all()
+    
     result = []
     for t in tables:
         s = t.active_session
@@ -34,10 +39,10 @@ def get_tables(session: SessionDep):
             DiningTableRead(
                 id=t.id,  # type: ignore
                 number=t.number,
-                is_occupied=s is not None,
+                is_occupied=t.is_occupied,
                 active_session_id=s.id if s else None,
-                customer_name=s.customer_name if s else None,
-                customer_arrival=s.started_at if s else None,
+                customer_name=t.active_customer_name,  # Using property
+                customer_arrival=s.started_at if s else None,  # Original logic
             )
         )
     return result

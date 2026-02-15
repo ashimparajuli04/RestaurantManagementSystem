@@ -6,7 +6,7 @@ from sqlmodel import Session
 from app.auth.services.auth_service import get_current_active_user
 from app.customer.models.customer import Customer
 from app.customer.schemas.customer import CustomerCreate, CustomerRead
-from app.customer.services.customer_service import create_customer, get_customer_by_number
+from app.customer.services.customer_service import create_customer, get_customer_by_id, get_customer_by_number
 from app.database import get_session
 
 
@@ -18,11 +18,11 @@ router = APIRouter(
 )
 
 @router.get(
-    "/{number}",
+    "/by-phone/{number}",
     response_model=CustomerRead,
     dependencies=[Depends(get_current_active_user)]
 )
-def read_customer(
+def read_customer_by_number(
     number:str,
     session: SessionDep
 ):
@@ -32,10 +32,26 @@ def read_customer(
         raise HTTPException(status_code=404, detail="Customer not found")
         
     return customer
+    
+@router.get(
+    "/by-id/{id}",
+    response_model=CustomerRead,
+    dependencies=[Depends(get_current_active_user)]
+)
+def read_customer_by_id(
+    id:int,
+    session: SessionDep
+):
+    customer = get_customer_by_id(session, id)
+    
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+        
+    return customer
 
 @router.post(
     "/",
-    response_model=Customer,
+    response_model=CustomerRead,
     dependencies=[Depends(get_current_active_user)]
 )
 def create_customer_route(

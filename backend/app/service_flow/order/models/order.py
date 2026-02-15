@@ -1,4 +1,4 @@
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Column, DateTime, Field, Relationship, SQLModel
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 from enum import Enum
@@ -20,9 +20,13 @@ class Order(SQLModel, table=True):
     
     # Timestamps
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
+        sa_column=Column(DateTime(timezone=True), nullable=False),
+        default_factory=lambda: datetime.now(timezone.utc),
     )
-    served_at: datetime | None = None
+    served_at: datetime | None = Field(
+        sa_column=Column(DateTime(timezone=True), nullable=True),
+        default=None,
+    )
     final_total: float | None = None
     
     # Relationships
@@ -39,8 +43,15 @@ class Order(SQLModel, table=True):
             return self.final_total
         return sum(item.line_total for item in self.items)
     
-    def mark_served(self):
+    def toggle_served(self):
         """Finalize the order"""
-        self.status = OrderStatus.SERVED
-        self.served_at = datetime.now(timezone.utc)
-        self.final_total = sum(item.line_total for item in self.items)
+        if self.status == OrderStatus.PENDING:
+            self.status = OrderStatus.SERVED
+            self.served_at = datetime.now(timezone.utc)
+            self.final_total = sum(item.line_total for item in self.items)
+        else:
+            self.status = OrderStatus.PENDING
+            self.served_at = None
+            self.final_total = None
+        
+    

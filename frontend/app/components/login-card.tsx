@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { useMutation } from "@tanstack/react-query"
 import api from "@/lib/api"
+import { Coffee, ArrowRight, ArrowLeft } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -102,6 +103,8 @@ export function LoginCard() {
 
     onSuccess: () => {
       switchMode("login")
+      setAlertMessage("Account created successfully! Please login.")
+      setShowAlert(true)
     },
 
     onError: () => {
@@ -111,42 +114,56 @@ export function LoginCard() {
   })
 
   return (
-    <Card className="w-full max-w-208 flex flex-row px-8 relative overflow-hidden bg-nj-cream">
+    <Card className="w-full max-w-5xl flex flex-row px-8 relative overflow-hidden bg-nj-cream shadow-2xl border-2 border-stone-200/50">
 
-      {/* LEFT IMAGE */}
-      <div className="flex-1 relative flex items-center justify-center">
+      {/* LEFT IMAGE with gradient overlay */}
+      <div className="flex-1 relative flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-50/50 to-transparent z-10" />
         <Image
           src="/hello.svg"
           alt="NJ'S Café and Restaurant"
           fill
-          className="object-contain"
+          className="object-contain transition-transform duration-700 hover:scale-105"
           priority
         />
+        
+        {/* Floating coffee icon */}
+        <div className="absolute bottom-8 left-8 z-20 animate-bounce">
+          <Coffee className="h-8 w-8 text-amber-700/30" />
+        </div>
       </div>
 
-      {/* RIGHT CARD */}
-      <Card className="flex-1 min-h-[25rem]">
+      {/* RIGHT CARD with animation */}
+      <Card className="flex-1 min-h-[28rem] shadow-none border-l-2 border-stone-200/50 animate-in slide-in-from-right duration-500">
 
-        <CardHeader>
-          <CardTitle>
+        <CardHeader className="space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="h-1 w-12 bg-gradient-to-r from-amber-600 to-amber-400 rounded-full" />
+          </div>
+          
+          <CardTitle className="text-2xl font-bold text-stone-900">
             {authMode === "login"
-              ? "Login to your account"
+              ? "Welcome back"
               : signupStep === 1
-              ? "Create your account"
+              ? "Join us"
               : "Almost there"}
           </CardTitle>
 
-          <CardDescription>
+          <CardDescription className="text-base text-stone-600">
             {authMode === "login"
-              ? "Enter your email below to login"
+              ? "Enter your credentials to continue"
               : signupStep === 1
-              ? "Tell us your name"
-              : "Set your login details"}
+              ? "Tell us about yourself"
+              : "Set up your login credentials"}
           </CardDescription>
 
-          <CardAction>
+          <CardAction className="pt-2">
+            <span className="text-sm text-stone-600">
+              {authMode === "login" ? "Don't have an account?" : "Already have an account?"}
+            </span>
             <Button
               variant="link"
+              className="text-amber-700 hover:text-amber-800 font-semibold px-2"
               onClick={() =>
                 switchMode(authMode === "login" ? "signup" : "login")
               }
@@ -157,97 +174,147 @@ export function LoginCard() {
         </CardHeader>
 
         <CardContent>
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-5">
 
             {/* LOGIN */}
             {authMode === "login" && (
-              <>
+              <div className="space-y-4 animate-in fade-in duration-500">
                 <div className="grid gap-2">
-                  <Label>Email</Label>
+                  <Label className="text-stone-700 font-medium">Email</Label>
                   <Input
+                    type="email"
+                    placeholder="your@email.com"
                     value={emailInput}
                     onChange={(e) => setEmailInput(e.target.value)}
+                    className="border-stone-300 focus:border-amber-500 transition-colors"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && emailInput && passwordInput) {
+                        loginMutation.mutate({ email: emailInput, password: passwordInput })
+                      }
+                    }}
                   />
                 </div>
 
                 <div className="grid gap-2">
-                  <Label>Password</Label>
+                  <Label className="text-stone-700 font-medium">Password</Label>
                   <Input
                     type="password"
+                    placeholder="••••••••"
                     value={passwordInput}
                     onChange={(e) => setPasswordInput(e.target.value)}
+                    className="border-stone-300 focus:border-amber-500 transition-colors"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && emailInput && passwordInput) {
+                        loginMutation.mutate({ email: emailInput, password: passwordInput })
+                      }
+                    }}
                   />
                 </div>
-              </>
+              </div>
             )}
 
             {/* SIGNUP STEP 1 */}
             {authMode === "signup" && signupStep === 1 && (
-              <>
+              <div className="space-y-4 animate-in fade-in duration-500">
                 <div className="grid gap-2">
-                  <Label>First Name *</Label>
+                  <Label className="text-stone-700 font-medium">
+                    First Name <span className="text-red-500">*</span>
+                  </Label>
                   <Input
+                    placeholder="John"
                     value={firstNameInput}
                     onChange={(e) => setFirstNameInput(e.target.value)}
+                    className="border-stone-300 focus:border-amber-500 transition-colors"
                   />
                 </div>
 
                 <div className="grid gap-2">
-                  <Label>Middle Name</Label>
+                  <Label className="text-stone-700 font-medium">
+                    Middle Name <span className="text-stone-400 text-xs">(optional)</span>
+                  </Label>
                   <Input
+                    placeholder="Michael"
                     value={middleNameInput}
                     onChange={(e) => setMiddleNameInput(e.target.value)}
+                    className="border-stone-300 focus:border-amber-500 transition-colors"
                   />
                 </div>
 
                 <div className="grid gap-2">
-                  <Label>Last Name *</Label>
+                  <Label className="text-stone-700 font-medium">
+                    Last Name <span className="text-red-500">*</span>
+                  </Label>
                   <Input
+                    placeholder="Doe"
                     value={lastNameInput}
                     onChange={(e) => setLastNameInput(e.target.value)}
+                    className="border-stone-300 focus:border-amber-500 transition-colors"
                   />
                 </div>
-              </>
+              </div>
             )}
 
             {/* SIGNUP STEP 2 */}
             {authMode === "signup" && signupStep === 2 && (
-              <>
+              <div className="space-y-4 animate-in fade-in duration-500">
                 <div className="grid gap-2">
-                  <Label>Email *</Label>
+                  <Label className="text-stone-700 font-medium">
+                    Email <span className="text-red-500">*</span>
+                  </Label>
                   <Input
+                    type="email"
+                    placeholder="your@email.com"
                     value={signUpEmailInput}
                     onChange={(e) => setSignUpEmailInput(e.target.value)}
+                    className="border-stone-300 focus:border-amber-500 transition-colors"
                   />
                 </div>
 
                 <div className="grid gap-2">
-                  <Label>Password *</Label>
+                  <Label className="text-stone-700 font-medium">
+                    Password <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     type="password"
+                    placeholder="••••••••"
                     value={signUpPasswordInput}
                     onChange={(e) => setSignUpPasswordInput(e.target.value)}
+                    className="border-stone-300 focus:border-amber-500 transition-colors"
                   />
+                  <p className="text-xs text-stone-500 mt-1">
+                    Must be at least 8 characters
+                  </p>
                 </div>
-              </>
+              </div>
             )}
           </div>
         </CardContent>
 
-        <CardFooter className="flex-col gap-2">
+        <CardFooter className="flex-col gap-3 pt-2">
 
           {/* LOGIN BUTTON */}
           {authMode === "login" && (
             <Button
-              disabled={loginMutation.isPending}
+              disabled={loginMutation.isPending || !emailInput || !passwordInput}
               onClick={() =>
                 loginMutation.mutate({
                   email: emailInput,
                   password: passwordInput,
                 })
               }
+              className="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-md hover:shadow-lg transition-all duration-200 group"
             >
-              {loginMutation.isPending ? "Logging in..." : "Login"}
+              {loginMutation.isPending ? (
+                <span className="flex items-center gap-2">
+                  <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Logging in...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  Login
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </span>
+              )}
             </Button>
           )}
 
@@ -256,35 +323,69 @@ export function LoginCard() {
             <Button
               onClick={() => {
                 if (!firstNameInput || !lastNameInput) {
-                  setAlertMessage("First and Last name required.")
+                  setAlertMessage("First and Last name are required.")
                   setShowAlert(true)
                   return
                 }
                 setSignupStep(2)
               }}
+              disabled={!firstNameInput || !lastNameInput}
+              className="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-md hover:shadow-lg transition-all duration-200 group"
             >
-              Next
+              <span className="flex items-center gap-2">
+                Continue
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </span>
             </Button>
           )}
 
           {/* SIGNUP STEP 2 */}
           {authMode === "signup" && signupStep === 2 && (
-            <Button
-              disabled={signupMutation.isPending}
-              onClick={() =>
-                signupMutation.mutate({
-                  first_name: firstNameInput,
-                  middle_name: middleNameInput,
-                  last_name: lastNameInput,
-                  email: signUpEmailInput,
-                  password: signUpPasswordInput,
-                })
-              }
-            >
-              {signupMutation.isPending
-                ? "Creating..."
-                : "Create Account"}
-            </Button>
+            <div className="w-full space-y-2">
+              <Button
+                disabled={signupMutation.isPending || !signUpEmailInput || !signUpPasswordInput}
+                onClick={() =>
+                  signupMutation.mutate({
+                    first_name: firstNameInput,
+                    middle_name: middleNameInput,
+                    last_name: lastNameInput,
+                    email: signUpEmailInput,
+                    password: signUpPasswordInput,
+                  })
+                }
+                className="w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white shadow-md hover:shadow-lg transition-all duration-200"
+              >
+                {signupMutation.isPending ? (
+                  <span className="flex items-center gap-2">
+                    <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Creating account...
+                  </span>
+                ) : (
+                  "Create Account"
+                )}
+              </Button>
+              
+              <Button
+                variant="ghost"
+                onClick={() => setSignupStep(1)}
+                className="w-full text-stone-600 hover:text-stone-900 group"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                Back
+              </Button>
+            </div>
+          )}
+
+          {/* Step indicator for signup */}
+          {authMode === "signup" && (
+            <div className="flex items-center gap-2 mt-2">
+              <div className={`h-1.5 w-8 rounded-full transition-all duration-300 ${
+                signupStep === 1 ? 'bg-amber-600' : 'bg-stone-300'
+              }`} />
+              <div className={`h-1.5 w-8 rounded-full transition-all duration-300 ${
+                signupStep === 2 ? 'bg-amber-600' : 'bg-stone-300'
+              }`} />
+            </div>
           )}
 
         </CardFooter>
@@ -292,15 +393,17 @@ export function LoginCard() {
 
       {/* ALERT */}
       <AlertDialog open={showAlert} onOpenChange={setShowAlert}>
-        <AlertDialogContent>
+        <AlertDialogContent className="border-stone-200">
           <AlertDialogHeader>
-            <AlertDialogTitle>Error</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-stone-900">
+              {alertMessage.includes("successfully") ? "Success!" : "Oops!"}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-stone-600">
               {alertMessage}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Close</AlertDialogCancel>
+            <AlertDialogCancel className="border-stone-300">Close</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

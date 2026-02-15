@@ -1,15 +1,14 @@
 'use client'
 import { useRouter } from "next/navigation"
 import { useParams } from "next/navigation"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import api from "@/lib/api"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { User, Receipt, Plus, DollarSign, UtensilsCrossed } from "lucide-react"
-import { ItemModal } from "@/components/tablesession/item-modal"
+import { User, Receipt, Plus, DollarSign, UtensilsCrossed, Phone, Coffee } from "lucide-react"
 import { OrderCard } from "@/components/tablesession/order-card"
 
 type OrderItem = {
@@ -33,121 +32,110 @@ type Order = {
 type TableSession = {
   id: number
   table_id: number
-  customer_name: string | null
+  customer_id: number | null
   total_bill: number
   orders: Order[]
   started_at: string
-  ended_at: string
+  ended_at: string | null
 }
 
-type MenuItem = {
+type Customer = {
   id: number
   name: string
-  price: number
-  category_id: number
-  sub_category_id: number | null
-  display_order: number
-  is_available: boolean
-}
-
-type MenuCategory = {
-  id: number
-  name: string
-  display_order: number
-}
-
-type MenuSubCategory = {
-  id: number
-  name: string
-  category_id: number
-  display_order: number
-}
-
-type AddItemParams = {
-  orderId: number
-  menuItemId: number
-  quantity: number
-  note: string
+  phone_number: string
+  customer_since: string
+  visit_count: number
 }
 
 export default function TableSessionPage() {
   const router = useRouter()
   const { id: sessionId } = useParams()
   const queryClient = useQueryClient()
+  const [phoneNumber, setPhoneNumber] = useState("")
   const [customerName, setCustomerName] = useState("")
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
-  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
-  const [isAddingItems, setIsAddingItems] = useState(false)
-  
-  const handleAddItems = async (items: Record<number, number>) => {
-    if (!selectedOrderId) return
-    
-    setIsAddingItems(true)
-    
-    try {
-      const itemsToAdd = Object.entries(items).filter(([_, qty]) => qty > 0)
-      
-      for (const [menuId, qty] of itemsToAdd) {
-        await addItemMutation.mutateAsync({
-          orderId: selectedOrderId,
-          menuItemId: Number(menuId),
-          quantity: qty,
-          note: ""
-        })
-      }
-      
-      setIsAddModalOpen(false)
-    } catch (error) {
-      console.error('Failed to add items:', error)
-    } finally {
-      setIsAddingItems(false)
-    }
-  }
+  const [showNameInput, setShowNameInput] = useState(false)
 
   const { data: session, isLoading } = useQuery<TableSession>({
     queryKey: ["tableSession", sessionId],
     queryFn: async () => (await api.get(`/table-sessions/${sessionId}`)).data,
   })
-
-  const { data: menuItems } = useQuery<MenuItem[]>({
-    queryKey: ["menu-items"],
-    queryFn: async () => (await api.get("/menu-items")).data,
-  })
-
-  const { data: categories } = useQuery<MenuCategory[]>({
-    queryKey: ["menu-categories"],
-    queryFn: async () => (await api.get("/menu-categories")).data,
-  })
   
-  const { data: subCategories } = useQuery<MenuSubCategory[]>({
-    queryKey: ["menu-subcategories"],
-    queryFn: async () => (await api.get("/menu-subcategories")).data,
+  const { data: sessionCustomer } = useQuery<Customer>({
+    queryKey: ["customer", session?.customer_id],
+    queryFn: async () => (await api.get(`/customer/by-id/${session?.customer_id}`)).data,
+    enabled: !!session?.customer_id,
   })
 
-  useEffect(() => {
-    if (session?.customer_name) setCustomerName(session.customer_name)
-  }, [session])
+  // Derive existing customer and phone from sessionCustomer
+  const existingCustomer = sessionCustomer || null
+  const displayPhoneNumber = phoneNumber || sessionCustomer?.phone_number || ""
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["tableSession", sessionId] })
 
-  const updateCustomerMutation = useMutation({
-    mutationFn: (name: string) => api.patch(`/table-sessions/${sessionId}`, { customer_name: name }),
+  // Search customer by phone
+  const searchCustomerMutation = useMutation({
+    mutationFn: async (phone: string) => {
+      try {
+        const response = await api.get(`/customer/by-phone/${phone}`)
+        return response.data as Customer
+      } catch (error) {
+        // Customer not found
+        return null
+      }
+    },
+    onSuccess: (customer) => {
+      if (customer) {
+        // Customer exists - link to session
+        setShowNameInput(false)
+        updateSessionCustomerMutation.mutate(customer.id)
+      } else {
+        // Customer doesn't exist - show name input
+        setShowNameInput(true)
+      }
+    },
+  })
+
+  // Create new customer
+  const createCustomerMutation = useMutation({
+    mutationFn: async (data: { name: string; phone_number: string }) => {
+      const response = await api.post('/customer', data)
+      return response.data as Customer
+    },
+    onSuccess: (customer) => {
+      setShowNameInput(false)
+      setCustomerName("")
+      setPhoneNumber("")
+      // Link customer to session
+      updateSessionCustomerMutation.mutate(customer.id)
+    },
+  })
+
+  // Update session with customer_id
+  const updateSessionCustomerMutation = useMutation({
+    mutationFn: (customer_id: number) => 
+      api.patch(`/table-sessions/${sessionId}`, { customer_id }),
     onSuccess: invalidate,
   })
+
+  const handlePhoneSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (phoneNumber.trim()) {
+      searchCustomerMutation.mutate(phoneNumber.trim())
+    }
+  }
+
+  const handleNameSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (customerName.trim() && phoneNumber.trim()) {
+      createCustomerMutation.mutate({
+        name: customerName.trim(),
+        phone_number: phoneNumber.trim()
+      })
+    }
+  }
 
   const createOrderMutation = useMutation({
     mutationFn: () => api.post(`/table-sessions/${sessionId}/orders`),
-    onSuccess: invalidate,
-  })
-
-  const deleteOrderMutation = useMutation({
-    mutationFn: (order_id: number) => api.delete(`/order/${order_id}`),
-    onSuccess: invalidate,
-  })
-
-  const addItemMutation = useMutation({
-    mutationFn: ({ orderId, menuItemId, quantity, note }: AddItemParams) => 
-      api.post(`/order/${orderId}/items`, { menu_item_id: menuItemId, quantity, note }),
     onSuccess: invalidate,
   })
 
@@ -156,77 +144,149 @@ export default function TableSessionPage() {
     onSuccess: invalidate,
   })
 
-  const getMenuItemName = (id: number): string => {
-    return menuItems?.find((m) => m.id === id)?.name || `Item #${id}`
-  }
-
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Loading session...</div>
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Coffee className="h-10 w-10 mx-auto text-stone-800 animate-pulse" />
+          <p className="text-stone-600">Loading session...</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        
-        {/* Header */}
-        <Card>
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <CardTitle className="text-3xl font-bold flex items-center gap-2">
-                  <UtensilsCrossed className="h-8 w-8 text-primary" />
-                  Table {session?.table_id}
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">Session #{sessionId}</p>
+    <div className="min-h-screen bg-stone-50">
+      {/* Header Section */}
+      <div className="bg-white border-b border-stone-200">
+        <div className="max-w-6xl mx-auto px-8 py-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <UtensilsCrossed className="h-6 w-6 text-stone-800" />
+                <div className="h-1 w-12 bg-stone-800" />
               </div>
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground">Total Bill</p>
-                <p className="text-3xl font-bold text-primary">₹{session?.total_bill.toFixed(2)}</p>
-              </div>
+              <h1 className="text-4xl font-bold text-stone-900 mb-1" style={{ fontFamily: 'Georgia, serif' }}>
+                Table {session?.table_id}
+              </h1>
+              <p className="text-stone-600 text-sm">Session #{sessionId}</p>
             </div>
+            <div className="text-right">
+              <p className="text-xs text-stone-500 uppercase tracking-wide mb-1">Total Bill</p>
+              <p className="text-4xl font-bold text-stone-900">₹{session?.total_bill.toFixed(2)}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Content Section */}
+      <div className="max-w-6xl mx-auto px-8 py-12 space-y-8">
+        
+        {/* Customer Information Card */}
+        <Card className="border-2 border-stone-200">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-semibold text-stone-900 flex items-center gap-2">
+              <User className="h-5 w-5 text-stone-600" />
+              Customer Information
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <form 
-              onSubmit={(e) => {
-                e.preventDefault()
-                updateCustomerMutation.mutate(customerName)
-              }}
-              className="flex gap-3 items-end"
-            >
-              <div className="flex-1">
-                <Label htmlFor="customer-name" className="flex items-center gap-2 mb-2">
-                  <User className="h-4 w-4" />Customer Name
-                </Label>
-                <Input 
-                  id="customer-name" 
-                  placeholder="Enter customer name" 
-                  value={customerName} 
-                  onChange={(e) => setCustomerName(e.target.value)} 
-                />
-              </div>
-              <Button 
-                type="submit"
-                disabled={updateCustomerMutation.isPending}
-              >
-                {updateCustomerMutation.isPending ? "Saving..." : "Save"}
-              </Button>
-            </form>
+            <div className="space-y-4">
+              {/* Phone Number Input */}
+              <form onSubmit={handlePhoneSubmit} className="flex gap-3 items-end">
+                <div className="flex-1">
+                  <Label htmlFor="phone-number" className="flex items-center gap-2 mb-2 text-xs text-stone-600 uppercase tracking-wide">
+                    <Phone className="h-3 w-3" />
+                    Phone Number
+                  </Label>
+                  <Input 
+                    id="phone-number" 
+                    placeholder="Enter phone number" 
+                    value={displayPhoneNumber} 
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    disabled={!!existingCustomer}
+                    className="border-stone-300 focus:border-stone-500"
+                  />
+                </div>
+                {!existingCustomer && (
+                  <Button 
+                    type="submit"
+                    disabled={searchCustomerMutation.isPending}
+                    className="bg-stone-800 hover:bg-stone-900 text-white"
+                  >
+                    {searchCustomerMutation.isPending ? "Searching..." : "Search"}
+                  </Button>
+                )}
+              </form>
+
+              {/* Display existing customer */}
+              {existingCustomer && (
+                <div className="p-4 bg-emerald-50 border-2 border-emerald-200 rounded-lg">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-emerald-700" />
+                      <span className="font-semibold text-emerald-900">{existingCustomer.name}</span>
+                    </div>
+                    <div className="flex items-center gap-6 text-sm">
+                      <div className="text-emerald-700">
+                        <span className="font-medium">Visits:</span> {existingCustomer.visit_count}
+                      </div>
+                      <div className="text-emerald-700">
+                        <span className="font-medium">Since:</span>{" "}
+                        {new Date(existingCustomer.customer_since).toLocaleDateString("en-NP", {
+                          year: "numeric",
+                          month: "short",
+                          day: "2-digit",
+                          timeZone: "Asia/Kathmandu",
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* New customer name input */}
+              {showNameInput && !existingCustomer && (
+                <form onSubmit={handleNameSubmit} className="flex gap-3 items-end">
+                  <div className="flex-1">
+                    <Label htmlFor="customer-name" className="flex items-center gap-2 mb-2 text-xs text-stone-600 uppercase tracking-wide">
+                      <User className="h-3 w-3" />
+                      Customer Name
+                    </Label>
+                    <Input 
+                      id="customer-name" 
+                      placeholder="Enter customer name" 
+                      value={customerName} 
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      className="border-stone-300 focus:border-stone-500"
+                    />
+                  </div>
+                  <Button 
+                    type="submit"
+                    disabled={createCustomerMutation.isPending}
+                    className="bg-stone-800 hover:bg-stone-900 text-white"
+                  >
+                    {createCustomerMutation.isPending ? "Creating..." : "Create Customer"}
+                  </Button>
+                </form>
+              )}
+            </div>
           </CardContent>
         </Card>
 
-        {/* Orders */}
+        {/* Orders Section */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-2xl font-bold flex items-center gap-2">
-              <Receipt className="h-6 w-6" />Orders ({session?.orders?.length || 0})
-            </h3>
+            <div className="flex items-center gap-3">
+              <Receipt className="h-6 w-6 text-stone-800" />
+              <h2 className="text-2xl font-bold text-stone-900" style={{ fontFamily: 'Georgia, serif' }}>
+                Orders ({session?.orders?.length || 0})
+              </h2>
+            </div>
             <Button 
               onClick={() => createOrderMutation.mutate()} 
               disabled={createOrderMutation.isPending}
+              className="bg-stone-800 hover:bg-stone-900 text-white"
             >
               <Plus className="h-4 w-4 mr-2" />
               {createOrderMutation.isPending ? "Creating..." : "New Order"}
@@ -234,30 +294,29 @@ export default function TableSessionPage() {
           </div>
 
           {session?.orders?.length ? (
-            session.orders.map((order, i) => (
-              <OrderCard 
-                key={order.id} 
-                order={order} 
-                index={i} 
-                getMenuItemName={getMenuItemName}
-                onAddItem={(id) => { 
-                  setSelectedOrderId(id)
-                  setIsAddModalOpen(true) 
-                }}
-                onDelete={(id) => deleteOrderMutation.mutate(id)}
-              />
-            ))
+            <div className="space-y-4">
+              {session.orders.map((order) => (
+                <OrderCard 
+                  key={order.id} 
+                  order={order}
+                  sessionId={Number(sessionId)}
+                />
+              ))}
+            </div>
           ) : (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <Receipt className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-lg font-medium mb-2">No orders yet</p>
-                <p className="text-sm text-muted-foreground mb-4">
+            <Card className="border-2 border-stone-200">
+              <CardContent className="py-16 text-center">
+                <Receipt className="h-12 w-12 mx-auto text-stone-400 mb-4" />
+                <p className="text-lg font-semibold text-stone-900 mb-2" style={{ fontFamily: 'Georgia, serif' }}>
+                  No orders yet
+                </p>
+                <p className="text-sm text-stone-600 mb-6">
                   Start by creating the first order for this table
                 </p>
                 <Button 
                   onClick={() => createOrderMutation.mutate()} 
                   disabled={createOrderMutation.isPending}
+                  className="bg-stone-800 hover:bg-stone-900 text-white"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   {createOrderMutation.isPending ? "Creating..." : "Create First Order"}
@@ -268,14 +327,15 @@ export default function TableSessionPage() {
         </div>
 
         {/* Actions */}
-        <Card>
+        <Card className="border-2 border-stone-200">
           <CardContent className="pt-6">
             <div className="flex gap-3 justify-end">
-              {!session.ended_at && (
+              {!session?.ended_at && (
                 <Button
                   variant="outline"
                   onClick={() => closeSessionMutation.mutate()}
                   disabled={closeSessionMutation.isPending}
+                  className="border-2 border-stone-300 text-stone-700 hover:bg-stone-100"
                 >
                   {closeSessionMutation.isPending ? "Please wait..." : "Free Table"}
                 </Button>
@@ -283,26 +343,15 @@ export default function TableSessionPage() {
 
               <Button 
                 onClick={() => router.push(`/checkout/${sessionId}`)}
-                className="bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+                className="bg-stone-800 hover:bg-stone-900 text-white font-semibold"
               >
-                <DollarSign className="h-4 w-4" />
+                <DollarSign className="h-4 w-4 mr-2" />
                 Print Bill
               </Button>
             </div>
           </CardContent>
         </Card>
       </div>
-
-      <ItemModal 
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        orderId={selectedOrderId}
-        menuItems={menuItems || []}
-        categories={categories || []}
-        subCategories={subCategories || []}
-        onAdd={handleAddItems}
-        isLoading={isAddingItems}
-      />
     </div>
   )
 }

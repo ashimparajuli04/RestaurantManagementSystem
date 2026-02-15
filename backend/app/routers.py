@@ -13,7 +13,7 @@ from app.service_flow.tablesession.routers import tablesession_routes, tablesess
 from app.service_flow.order.routers import order_routes
 from app.service_flow.orderitem.routers import orderitem_routes
 from app.statistics.routers import stat_routes
-from app.customer.routers import customer_routes
+from app.customer.routers import customer_routes, customeradmin_routes
 
 routers = [
     menuitems_routes,
@@ -33,4 +33,5 @@ routers = [
     orderitem_routes,
     stat_routes,
     customer_routes,
+    customeradmin_routes,
 ]

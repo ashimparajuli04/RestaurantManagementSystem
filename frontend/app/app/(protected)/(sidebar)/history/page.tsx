@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import api from "@/lib/api"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { 
@@ -26,7 +27,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Clock, User, UtensilsCrossed, Calendar, Receipt, Eye, Trash } from "lucide-react"
+import { Clock, User, UtensilsCrossed, Calendar, Receipt, Eye, Trash, Coffee } from "lucide-react"
+import { useAuth } from "@/providers/auth-provider"
 
 type TableSessionHistory = {
   id: number
@@ -50,6 +52,7 @@ export default function HistoryPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const pageSize = 5
   const queryClient = useQueryClient()
+  const { user } = useAuth()
 
   const { data, isLoading } = useQuery<PaginationResponse>({
     queryKey: ["table-session-history", currentPage, pageSize],
@@ -180,42 +183,48 @@ export default function HistoryPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading history...</div>
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Coffee className="h-10 w-10 mx-auto text-stone-800 animate-pulse" />
+          <p className="text-stone-600">Loading history...</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <Receipt className="h-8 w-8" />
-              Session History
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {data?.total || 0} completed sessions
-            </p>
+    <div className="min-h-screen bg-stone-50">
+      {/* Header Section */}
+      <div className="bg-white border-b border-stone-200 rounded-2xl">
+        <div className="max-w-6xl mx-auto px-8 py-8">
+          <div className="flex items-center gap-3 mb-2">
+            <Receipt className="h-6 w-6 text-stone-800" />
+            <div className="h-1 w-12 bg-stone-800" />
           </div>
+          <h1 className="text-4xl font-bold text-stone-900 mb-1" style={{ fontFamily: 'Georgia, serif' }}>
+            Session History
+          </h1>
+          <p className="text-stone-600 text-sm">
+            {data?.total || 0} completed sessions
+          </p>
         </div>
+      </div>
 
+      {/* Content Section */}
+      <div className="max-w-6xl mx-auto px-8 py-12">
         {/* Session Cards */}
         {data && data.items.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-4 mb-12">
             {data.items.map((session) => (
-              <Card key={session.id}>
+              <Card key={session.id} className="border-2 border-stone-200 hover:border-stone-300 transition-colors">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
                       <CardTitle className="text-lg flex items-center gap-2">
-                        <UtensilsCrossed className="h-5 w-5 text-muted-foreground" />
-                        Table {session.table_id}
+                        <UtensilsCrossed className="h-5 w-5 text-stone-600" />
+                        <span style={{ fontFamily: 'Georgia, serif' }}>Table {session.table_id}</span>
                       </CardTitle>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-4 text-sm text-stone-600">
                         <div className="flex items-center gap-1.5">
                           <Calendar className="h-3 w-3" />
                           {formatDate(session.ended_at)}
@@ -223,9 +232,8 @@ export default function HistoryPage() {
                         <div className="flex items-center gap-1.5">
                           <Clock className="h-3 w-3" />
                           {formatTime(session.started_at)}
-                          
                         </div>
-                        <span>--</span>
+                        <span className="text-stone-400">—</span>
                         <div className="flex items-center gap-1.5">
                           <Clock className="h-3 w-3" />
                           {formatTime(session.ended_at)}
@@ -233,102 +241,127 @@ export default function HistoryPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 font-semibold">
                         Completed
                       </Badge>
                       <div className="text-right">
-                        <p className="text-sm text-muted-foreground">Total Bill</p>
-                        <p className="text-2xl font-bold">₹{session.final_bill.toFixed(2)}</p>
+                        <p className="text-xs text-stone-500 uppercase tracking-wide">Total Bill</p>
+                        <p className="text-2xl font-bold text-stone-900">₹{session.final_bill.toFixed(2)}</p>
                       </div>
                     </div>
                   </div>
                 </CardHeader>
                 
                 <CardContent>
-                  <div className="grid grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-xs text-muted-foreground">Customer</p>
-                          <p className="font-medium text-sm">{session.customer_name ? session.customer_name : "Unknown"}</p>
-                        </div>
-                      </div>
+                  <div className="grid grid-cols-4 gap-4 p-4 bg-stone-50 rounded-lg border border-stone-200">
                     <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <User className="h-4 w-4 text-stone-500" />
                       <div>
-                        <p className="text-xs text-muted-foreground">Duration</p>
-                        <p className="font-medium text-sm">
+                        <p className="text-xs text-stone-500 uppercase tracking-wide">Customer</p>
+                        <p className="font-medium text-sm text-stone-900">{session.customer_name || "Unknown"}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-stone-500" />
+                      <div>
+                        <p className="text-xs text-stone-500 uppercase tracking-wide">Duration</p>
+                        <p className="font-medium text-sm text-stone-900">
                           {getDuration(session.started_at, session.ended_at)}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Receipt className="h-4 w-4 text-muted-foreground" />
+                      <Receipt className="h-4 w-4 text-stone-500" />
                       <div>
-                        <p className="text-xs text-muted-foreground">Session ID</p>
-                        <p className="font-medium text-sm">#{session.id}</p>
+                        <p className="text-xs text-stone-500 uppercase tracking-wide">Session ID</p>
+                        <p className="font-medium text-sm text-stone-900">#{session.id}</p>
                       </div>
                     </div>
-                    <div className="flex justify-end gap-1.5 col-start-4">
+                    <div className="flex justify-end gap-2 col-start-4">
                       <Button
                         variant="outline"
                         size="sm"
-                        className="basis-1/2"
+                        className="border-stone-800 text-stone-800 hover:bg-stone-800 hover:text-white transition-all font-semibold"
                         onClick={() => router.push(`/table-session/${session.id}`)}
-                      ><Eye className="h-4 w-4 mr-2" />View</Button>
-                      {/*<Button variant="destructive" size="sm" className="basis-1/2"><Trash className="h-4 w-4 mr-2" />Delete</Button>*/}
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            className="basis-1/2"
-                          >
-                            <Trash className="h-4 w-4 mr-2" />
-                            Delete
-                          </Button>
-                        </AlertDialogTrigger>
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        View
+                      </Button>
                       
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              Are you absolutely sure?
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will permanently delete the table session from the database.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                      
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      
-                            <AlertDialogAction variant="destructive"
-                              onClick={() => deleteSessionMutation.mutate(session.id)}
-                              disabled={deleteSessionMutation.isPending}
+                      {user?.role !== "admin" ? (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  disabled
+                                  className="opacity-50 cursor-not-allowed"
+                                >
+                                  <Trash className="h-4 w-4 mr-2" />
+                                  Delete
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Admin access required</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              className="font-semibold"
                             >
-                              {deleteSessionMutation.isPending &&
-                               deleteSessionMutation.variables === session.id
-                                ? "Deleting..."
-                                : "Delete"}
-                            </AlertDialogAction>
+                              <Trash className="h-4 w-4 mr-2" />
+                              Delete
+                            </Button>
+                          </AlertDialogTrigger>
                       
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-
+                          <AlertDialogContent className="border-stone-200">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="text-stone-900">
+                                Are you absolutely sure?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription className="text-stone-600">
+                                This action cannot be undone. This will permanently delete the table session from the database.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                      
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction 
+                                className="bg-red-600 hover:bg-red-700"
+                                onClick={() => deleteSessionMutation.mutate(session.id)}
+                                disabled={deleteSessionMutation.isPending}
+                              >
+                                {deleteSessionMutation.isPending &&
+                                 deleteSessionMutation.variables === session.id
+                                  ? "Deleting..."
+                                  : "Delete"}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
                     </div>
                   </div>
-                  
                 </CardContent>
               </Card>
             ))}
           </div>
         ) : (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <Receipt className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-lg font-medium mb-2">No session history</p>
-              <p className="text-sm text-muted-foreground">
+          <Card className="border-2 border-stone-200">
+            <CardContent className="py-16 text-center">
+              <Receipt className="h-12 w-12 mx-auto text-stone-400 mb-4" />
+              <p className="text-lg font-semibold text-stone-900 mb-2" style={{ fontFamily: 'Georgia, serif' }}>
+                No session history
+              </p>
+              <p className="text-sm text-stone-600">
                 Completed sessions will appear here
               </p>
             </CardContent>

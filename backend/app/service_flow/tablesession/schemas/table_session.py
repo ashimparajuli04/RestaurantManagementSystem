@@ -6,12 +6,12 @@ class TableSessionCreate(SQLModel):
     table_id: int
     
 class TableSessionUpdate(SQLModel):
-    customer_name: str | None = None
+    customer_id: int | None = None
     
 class TableSessionRead(SQLModel):
     id: int
     table_id: int
-    customer_name: str | None
+    customer_id: int | None
     total_bill: float
     final_bill: float | None = None
     started_at: datetime

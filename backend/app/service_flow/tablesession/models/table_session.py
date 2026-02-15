@@ -15,10 +15,10 @@ class TableSession(SQLModel, table=True):
     table_id: int = Field(
         foreign_key="diningtable.id",
     )
-    customer_name: str | None = None
-    # customer_id: int | None = Field(
-    #     foreign_key="customer.id",
-    # )
+    customer_id: int | None = Field(
+        default = None,
+        foreign_key="customer.id",
+    )
 
     started_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True), nullable=False),
@@ -37,9 +37,9 @@ class TableSession(SQLModel, table=True):
         back_populates="session",
         sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
-    # customer: "Customer" = Relationship(
-    #     back_populates="sessions"
-    # )
+    customer: "Customer" = Relationship(
+        back_populates="sessions"
+    )
     
     
     @property
@@ -49,7 +49,23 @@ class TableSession(SQLModel, table=True):
             return self.final_bill
         return sum(order.total_amount for order in self.orders)
         
+    @property    
+    def customer_name(self) -> str | None:
+        """Get the customer name from the related customer"""
+        if self.customer:
+            return self.customer.name
+        return None
+        
     def close_session(self):
-        """Finalize the session"""
+        """Finalize the session and update customer stats"""
         self.ended_at = datetime.now(timezone.utc)
         self.final_bill = sum(order.total_amount for order in self.orders)
+        
+        # Update customer stats if customer exists
+        if self.customer:
+            self.customer.visit_count += 1
+            self.customer.total_spent += self.final_bill
+        
+    
+        
+    

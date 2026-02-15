@@ -8,8 +8,12 @@ class OrderCreate(SQLModel):
     
 class OrderRead(SQLModel):
     id: int
+    session_id: int
     items: list[OrderItemRead] = []
     total_amount: float
     created_at: datetime
     status: OrderStatus
     served_at: datetime | None
+    
+class OrderUpdate(SQLModel):
+    status: OrderStatus
