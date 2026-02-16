@@ -10,6 +10,7 @@ type Table = {
   id: number
   number: number
   is_occupied: boolean
+  type: string
   active_session_id: number | null
   customer_name: string | null
   customer_arrival: string | null
@@ -32,7 +33,7 @@ export function TableCard({ table }: { table: Table }) {
   
   const createSessionMutation = useMutation({
     mutationFn: async () => {
-      const res = await api.post("/table-sessions/", { table_id: table.id })
+      const res = await api.post("/table-sessions", { table_id: table.id })
       return res.data
     },
     onSuccess: (data) => {

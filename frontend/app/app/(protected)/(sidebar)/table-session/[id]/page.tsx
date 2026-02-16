@@ -299,7 +299,6 @@ export default function TableSessionPage() {
                 <OrderCard 
                   key={order.id} 
                   order={order}
-                  sessionId={Number(sessionId)}
                 />
               ))}
             </div>
