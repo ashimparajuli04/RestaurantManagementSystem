@@ -55,7 +55,7 @@ export function TableCard({ table }: { table: Table }) {
       {/* Minimal top accent line */}
       <div className={`h-1 w-full ${isOccupied ? "bg-stone-800" : "bg-stone-400"}`} />
 
-      <div className="p-6">
+      <div className="p-6 rounded-2xl">
         {/* Header - Clean & Minimal */}
         <div className="mb-6">
           <div className="flex items-baseline justify-between mb-2">
@@ -64,7 +64,7 @@ export function TableCard({ table }: { table: Table }) {
             </h3>
             <div className={`
               h-2 w-2 rounded-full
-              ${isOccupied ? "bg-stone-800 animate-pulse" : "bg-stone-400"}
+              ${isOccupied ? "bg-green-600 animate-pulse" : "bg-stone-400"}
             `} />
           </div>
           
