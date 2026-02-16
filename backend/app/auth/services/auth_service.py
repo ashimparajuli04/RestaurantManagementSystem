@@ -15,9 +15,13 @@ from app.auth.utils.auth_utils import verify_password
 
 from app.user.models.user import User, UserRole
 from app.user.services.user_service import get_user_by_email
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 
-SECRET_KEY = "heheheitsasecret"
+SECRET_KEY = os.getenv('JWT_SECRET_KEY')
 ALGORITHM = "HS256"
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
