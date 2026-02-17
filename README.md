@@ -1,6 +1,6 @@
 # NJ's Café & Restaurant — Service Management System
 
-A full-stack restaurant service management system built from a real brief: a friend in hospitality described what a proper café management system should actually do, and this is the result, with a FastAPI backend and a Next.js frontend. Handles everything from table sessions and order tracking to customer history and menu administration.
+A full-stack restaurant service management system Built from a real brief: a friend in hospitality described what a proper café management system should actually do, and this is the result, with a FastAPI backend and a Next.js frontend. Handles everything from table sessions and order tracking to customer history and menu administration.
 
 ---
 
@@ -8,15 +8,15 @@ A full-stack restaurant service management system built from a real brief: a fri
 
 ### Backend
 
-|Layer|Technology|
-|---|---|
-|Framework|FastAPI|
-|ORM|SQLModel (SQLAlchemy + Pydantic)|
-|Database|PostgreSQL (hosted on [Neon](https://neon.tech))|
-|Migrations|Alembic|
-|Auth|JWT via OAuth2 password flow|
-|Runtime|Python 3.14 (via `uv`)|
-|Containerization|Docker / Docker Compose|
+| Layer            | Technology                                       |
+| ---------------- | ------------------------------------------------ |
+| Framework        | FastAPI                                          |
+| ORM              | SQLModel (SQLAlchemy + Pydantic)                 |
+| Database         | PostgreSQL (hosted on [Neon](https://neon.tech)) |
+| Migrations       | Alembic                                          |
+| Auth             | JWT via OAuth2 password flow                     |
+| Runtime          | Python 3.14 (via `uv`)                           |
+
 
 ### Frontend
 
@@ -232,19 +232,9 @@ Customer
 
 ### Prerequisites
 
-- Docker & Docker Compose
-- Or: Python 3.12+, PostgreSQL (or a [Neon](https://neon.tech) serverless PostgreSQL connection), [`uv`](https://github.com/astral-sh/uv), and Node.js 18+
+- Python 3.12+, PostgreSQL (or a [Neon](https://neon.tech) serverless PostgreSQL connection), [`uv`](https://github.com/astral-sh/uv), and Node.js 18+
 
-### With Docker
-
-```bash
-git clone https://github.com/ashimparajuli04/njs-eatery
-cd njs-cafe
-cp backend/.env.example backend/.env   # Fill in your values
-docker compose up --build
-```
-
-### Backend (without Docker)
+### Backend
 
 ```bash
 cd backend
@@ -262,10 +252,10 @@ uv run alembic upgrade head
 uv run fastapi dev app.py
 ```
 
-The API will be available at `http://localhost:8000`.  
+The API will be available at `http://localhost:8000`
 Interactive docs: `http://localhost:8000/docs`
 
-### Frontend (without Docker)
+### Frontend
 
 ```bash
 cd frontend
@@ -274,7 +264,7 @@ cd frontend
 npm install
 
 # Set up environment
-cp .env.example .env.local   # Set NEXT_PUBLIC_API_URL=http://localhost:8000
+cp .env.example .env.local   # Set NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
 
 # Start the dev server
 npm run dev
@@ -293,7 +283,7 @@ DATABASE_URL=postgresql://user:password@localhost:5432/njs_cafe
 # Or a Neon serverless connection string (recommended for cloud deployment)
 # DATABASE_URL=postgresql://user:password@ep-xxxx.us-east-1.aws.neon.tech/njs_cafe?sslmode=require
 
-SECRET_KEY=your-jwt-secret-key
+JWT_SECRET_KEY=your-jwt-secret-key
 ALGORITHM=HS256
 ```
 
