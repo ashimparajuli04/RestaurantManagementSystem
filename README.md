@@ -1,6 +1,6 @@
 # NJ's Café & Restaurant — Service Management System
 
-A full-stack restaurant service management system Built from a real brief: a friend in hospitality described what a proper café management system should actually do, and this is the result, with a FastAPI backend and a Next.js frontend. Handles everything from table sessions and order tracking to customer history and menu administration.
+A full-stack restaurant service management system built from a real brief: a friend in hospitality described what a proper café management system should actually do, and this is the result, with a FastAPI backend and a Next.js frontend. Handles everything from table sessions and order tracking to customer history and menu administration.
 
 ---
 
