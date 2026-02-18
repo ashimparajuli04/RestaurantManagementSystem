@@ -15,6 +15,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
+import { LoadingView } from "@/components/loading"
 
 type Order = {
   id: number
@@ -60,12 +61,7 @@ export default function OrdersPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <Coffee className="h-10 w-10 mx-auto text-stone-800 animate-pulse" />
-          <p className="text-stone-600">Loading orders...</p>
-        </div>
-      </div>
+      <LoadingView label="orders"/>
     )
   }
 

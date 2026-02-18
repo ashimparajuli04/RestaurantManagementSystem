@@ -13,15 +13,10 @@ def on_startup():
 for routes in routers:
     app.include_router(routes.router)
 
-origins = [
-    "https://restaurant-management-frontend.vercel.app",
-    "http://localhost:3000",  # for local dev
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origins=["*"],  # ⚠️ allow all origins
+    allow_credentials=False,  # must be False if allow_origins="*"
     allow_methods=["*"],
     allow_headers=["*"],
 )

@@ -33,6 +33,21 @@ def create_order_item_route(
         order_item_in,
         order_id
     )
+
+@router.post(
+    "/{order_id}/items/bulk",
+    status_code=201,
+    dependencies=[Depends(get_current_active_user)]
+)
+def create_order_items_bulk_route(
+    order_id: int,
+    order_items_in: list[OrderItemCreate],
+    session: SessionDep,
+):
+    return [
+        create_order_item(session, item, order_id)
+        for item in order_items_in
+    ]
     
 @router.delete(
     "/{id}",

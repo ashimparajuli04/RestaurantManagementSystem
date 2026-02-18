@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label"
 import { User, Receipt, Plus, DollarSign, UtensilsCrossed, Phone, Coffee } from "lucide-react"
 import { OrderCard } from "@/components/tablesession/order-card"
 import { toast } from "sonner"
+import { LoadingView } from "@/components/loading"
 
 type OrderItem = {
   id: number
@@ -165,12 +166,7 @@ export default function TableSessionPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <Coffee className="h-10 w-10 mx-auto text-stone-800 animate-pulse" />
-          <p className="text-stone-600">Loading session...</p>
-        </div>
-      </div>
+      <LoadingView label="table session"/>
     )
   }
 

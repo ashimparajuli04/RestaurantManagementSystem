@@ -90,10 +90,22 @@ export function OrderCard({
       api.post(`/order/${orderId}/items`, { menu_item_id: menuItemId, quantity, note }),
     onSuccess: invalidate,
   })
+  
+  
+  const addItemsMutation = useMutation({
+    mutationFn: ({ orderId, items }: { orderId: number; items: { menu_item_id: number; quantity: number; note: string }[] }) =>
+      api.post(`/order/${orderId}/items/bulk`, items),
+    onSuccess: invalidate,
+  })
 
   // Delete order mutation
   const deleteOrderMutation = useMutation({
     mutationFn: () => api.delete(`/order/${order.id}`),
+    onSuccess: invalidate,
+  })
+  
+  const deleteOrderItemMutation = useMutation({
+    mutationFn: (itemId: number) => api.delete(`/orderitem/${itemId}`),
     onSuccess: invalidate,
   })
 
@@ -110,22 +122,19 @@ export function OrderCard({
     return menuItems?.find((m) => m.id === id)?.name || `Item #${id}`
   }
 
-  const handleAddItems = async (items: Record<number, number>) => {
-    const itemsToAdd = Object.entries(items).filter(([_, qty]) => qty > 0)
-    
-    try {
-      for (const [menuId, qty] of itemsToAdd) {
-        await addItemMutation.mutateAsync({
-          orderId: order.id,
-          menuItemId: Number(menuId),
-          quantity: qty,
-          note: ""
-        })
-      }
-      setIsAddModalOpen(false)
-    } catch (error) {
-      console.error('Failed to add items:', error)
-    }
+  const handleAddItems = (items: Record<number, number>) => {
+    const itemsToAdd = Object.entries(items)
+      .filter(([_, qty]) => qty > 0)
+      .map(([menuId, qty]) => ({
+        menu_item_id: Number(menuId),
+        quantity: qty,
+        note: ""
+      }))
+  
+    addItemsMutation.mutate(
+      { orderId: order.id, items: itemsToAdd },
+      { onSuccess: () => setIsAddModalOpen(false) }
+    )
   }
 
   const formatServedTime = (dateString: string | null) => {
@@ -213,6 +222,15 @@ export function OrderCard({
                     {item.note && <p className="text-sm text-muted-foreground italic">Note: {item.note}</p>}
                   </div>
                   <div className="flex items-center gap-6">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => deleteOrderItemMutation.mutate(item.id)}
+                      disabled={deleteOrderItemMutation.isPending || isServed}
+                      className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                     <span className="text-sm"><span className="text-muted-foreground">Qty:</span> {item.quantity}</span>
                     <span className="text-sm"><span className="text-muted-foreground">@</span> ₹{item.price_at_time}</span>
                     <p className="font-bold min-w-20 text-right">₹{item.line_total}</p>
@@ -253,7 +271,7 @@ export function OrderCard({
         categories={categories || []}
         subCategories={subCategories || []}
         onAdd={handleAddItems}
-        isLoading={addItemMutation.isPending}
+        isLoading={addItemsMutation.isPending}
       />
     </>
   )

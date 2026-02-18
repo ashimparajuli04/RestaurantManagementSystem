@@ -29,6 +29,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Coffee, Users, Trash2, Shield } from "lucide-react"
+import { LoadingView } from "@/components/loading"
 
 type User = {
   id: number
@@ -105,12 +106,7 @@ export default function UsersManagementPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <Coffee className="h-10 w-10 mx-auto text-stone-800 animate-pulse" />
-          <p className="text-stone-600">Loading users...</p>
-        </div>
-      </div>
+      <LoadingView label="users"/>
     )
   }
 

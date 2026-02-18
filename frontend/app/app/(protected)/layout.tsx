@@ -3,11 +3,14 @@
 import { ReactNode } from "react";
 import { AuthProvider, useAuth } from "@/providers/auth-provider";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { LoadingView } from "@/components/loading";
 
 function ProtectedGate({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
 
-  if (loading) return <div className="h-screen flex items-center justify-center">Loading...</div>;
+  if (loading)
+    return
+  <LoadingView label="NJ'S Restaurant and Cafe"/>;
   if (!user) return null; // redirect is already handled inside AuthProvider
 
   return <>{children}</>;

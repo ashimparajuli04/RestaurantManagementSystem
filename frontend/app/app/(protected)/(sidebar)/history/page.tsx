@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Clock, User, UtensilsCrossed, Calendar, Receipt, Eye, Trash, Coffee } from "lucide-react"
 import { useAuth } from "@/providers/auth-provider"
+import { LoadingView } from "@/components/loading"
 
 type TableSessionHistory = {
   id: number
@@ -183,12 +184,7 @@ export default function HistoryPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <Coffee className="h-10 w-10 mx-auto text-stone-800 animate-pulse" />
-          <p className="text-stone-600">Loading history...</p>
-        </div>
-      </div>
+      <LoadingView label="table session history"/>
     )
   }
 

@@ -22,7 +22,7 @@ load_dotenv()
 
 
 SECRET_KEY = os.getenv('JWT_SECRET_KEY')
-ALGORITHM = "HS256"
+ALGORITHM = os.getenv('ALGORITHM')
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 

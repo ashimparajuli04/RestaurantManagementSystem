@@ -5,13 +5,6 @@ import sys
 from pathlib import Path
 from dotenv import load_dotenv
 import os
-
-# Load environment variables
-load_dotenv()
-
-# Add the parent directory to the path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-
 # Import your SQLModel models
 from sqlmodel import SQLModel
 from menu.models.menu_category import MenuCategory
@@ -24,6 +17,13 @@ from service_flow.tablesession.models.table_session import TableSession
 from service_flow.order.models.order import Order
 from service_flow.orderitem.models.order_item import OrderItem
 from customer.models.customer import Customer
+# Load environment variables
+load_dotenv()
+
+# Add the parent directory to the path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+
+
 
 
 

@@ -55,7 +55,7 @@ const items = [
 ]
 
 export function AppSidebar() {
-  const { open, setOpen } = useSidebar()
+  const { open, setOpen, setOpenMobile } = useSidebar()
   const { user } = useAuth()
   const router = useRouter()
 
@@ -123,7 +123,7 @@ export function AppSidebar() {
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <Link href={item.url}>
+                    <Link href={item.url} onClick={() => setOpenMobile(false)}>
                       <item.icon />
                       <span>{item.title}</span>
                     </Link>

@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { TableCard } from "@/components/table-card"
 import { Button } from "@/components/ui/button"
-import { Plus, Coffee, Home, Building2, ShoppingBag } from "lucide-react"
+import { Plus, Coffee, Home, Building2, ShoppingBag, LucideIcon } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select"
 import api from "@/lib/api" 
 import { useAuth } from "@/providers/auth-provider"
+import { LoadingView } from '@/components/loading'
 
 type TableType = "indoor" | "rooftop" | "takeaway"
 
@@ -35,6 +36,46 @@ type Table = {
   active_session_id: number | null
   customer_name: string | null
   customer_arrival: string | null
+}
+
+const TableSection = ({ 
+  title, 
+  icon: Icon, 
+  tables, 
+  type 
+}: { 
+  title: string
+  icon: LucideIcon
+  tables: Table[]
+  type: TableType
+}) => {
+  if (tables.length === 0) return null
+  
+  const occupiedInSection = tables.filter(t => t.is_occupied).length
+
+  return (
+    <div className="space-y-4">
+      {/* Section Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Icon className="h-5 w-5 text-stone-700" />
+          <h2 className="text-2xl font-bold text-stone-900" style={{ fontFamily: 'Georgia, serif' }}>
+            {title}
+          </h2>
+          <span className="text-sm text-stone-600">
+            ({occupiedInSection} of {tables.length} occupied)
+          </span>
+        </div>
+      </div>
+
+      {/* Tables Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {tables.map((table) => (
+          <TableCard key={table.id} table={table} />
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export default function DashboardPage() {
@@ -81,12 +122,7 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <Coffee className="h-10 w-10 mx-auto text-stone-800 animate-pulse" />
-          <p className="text-stone-600">Loading dashboard...</p>
-        </div>
-      </div>
+      <LoadingView label="dashboard"/>
     )
   }
 
@@ -94,46 +130,6 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center">
         <p className="text-stone-600">Error loading tables</p>
-      </div>
-    )
-  }
-
-  const TableSection = ({ 
-    title, 
-    icon: Icon, 
-    tables, 
-    type 
-  }: { 
-    title: string
-    icon: any
-    tables: Table[]
-    type: TableType
-  }) => {
-    if (tables.length === 0) return null
-    
-    const occupiedInSection = tables.filter(t => t.is_occupied).length
-
-    return (
-      <div className="space-y-4">
-        {/* Section Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Icon className="h-5 w-5 text-stone-700" />
-            <h2 className="text-2xl font-bold text-stone-900" style={{ fontFamily: 'Georgia, serif' }}>
-              {title}
-            </h2>
-            <span className="text-sm text-stone-600">
-              ({occupiedInSection} of {tables.length} occupied)
-            </span>
-          </div>
-        </div>
-
-        {/* Tables Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {tables.map((table) => (
-            <TableCard key={table.id} table={table} />
-          ))}
-        </div>
       </div>
     )
   }

@@ -1,10 +1,13 @@
 'use client'
 import { useParams, useRouter } from "next/navigation"
-import { useQuery, useMutation } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import api from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Printer, CheckCircle2, Coffee } from "lucide-react"
+import { LoadingView } from "@/components/loading"
+import { toast } from "sonner"
+import { AxiosError } from "axios"
 
 type OrderItem = {
   id: number
@@ -46,6 +49,7 @@ type MenuItem = {
 export default function CheckoutPage() {
   const params = useParams()
   const router = useRouter()
+  const queryClient = useQueryClient()
   const sessionId = params.id
   const [isProcessing, setIsProcessing] = useState(false)
 
@@ -58,11 +62,28 @@ export default function CheckoutPage() {
     queryKey: ["menu-items"],
     queryFn: async () => (await api.get("/menu-items")).data,
   })
-
+  
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["tableSession", sessionId] })
+  
   const closeSessionMutation = useMutation({
     mutationFn: () => api.post(`/table-sessions/${sessionId}/close`),
     onSuccess: () => {
-      router.push('/dashboard')
+      toast.success("Table freed successfully!", {
+        description: "The table is now available for new customers.",
+      })
+      invalidate()
+    },
+    onError: (error: AxiosError<{ detail: string }>) => {
+      // Check if it's the unserved orders error
+      if (error.response?.status === 400 && error.response?.data?.detail?.includes("all orders must be served")) {
+        toast.error("Cannot free table", {
+          description: "All orders must be served before closing the session.",
+        })
+      } else {
+        toast.error("Failed to free table", {
+          description: "An error occurred. Please try again.",
+        })
+      }
     },
   })
 
@@ -87,12 +108,7 @@ export default function CheckoutPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <Coffee className="h-10 w-10 mx-auto text-stone-800 animate-pulse" />
-          <p className="text-stone-600">Loading...</p>
-        </div>
-      </div>
+      <LoadingView label="checkout page"/>
     )
   }
 
