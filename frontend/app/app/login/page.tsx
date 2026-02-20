@@ -32,8 +32,6 @@ export default function login() {
       </div>
       
       {/* Floating decoration elements */}
-      <div className="absolute top-20 left-20 w-32 h-32 bg-amber-200/20 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-20 right-20 w-40 h-40 bg-orange-200/20 rounded-full blur-3xl animate-pulse delay-700" />
     </div>
   );
 }
